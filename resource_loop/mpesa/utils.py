@@ -15,7 +15,7 @@ def get_access_token():
     api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate"
     
     try:
-        # 2. Pass parameters separately (This fixed your 400 Error)
+        # 2. Pass parameters separately to avoid URL encoding issues
         response = requests.get(
             api_url, 
             params={"grant_type": "client_credentials"},
@@ -37,13 +37,17 @@ def format_phone_number(phone):
     return phone
 
 def generate_password():
-    """Generates the password and timestamp required for STK push."""
+    # 1. Get the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    shortcode = settings.SHORTCODE
-    passkey = settings.PASSKEY
     
+    # 2. HARDCODE these values for Sandbox (Do not use settings.py )
+    shortcode = "174379"
+    passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+    
+    # 3. Generate the password
     data_to_encode = shortcode + passkey + timestamp
     encoded_string = base64.b64encode(data_to_encode.encode()).decode()
+    
     return encoded_string, timestamp
 
 def stk_push(amount, phone):
@@ -64,33 +68,54 @@ def stk_push(amount, phone):
         "Content-Type": "application/json"
     }
 
+    # Inside stk_push function...
     payload = {
-        "BusinessShortCode": settings.SHORTCODE,
+        "BusinessShortCode": 174379, # Hardcoded
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": int(float(amount)), # Ensure amount is an integer
+        "Amount": int(float(amount)),
         "PartyA": formatted_phone,
-        "PartyB": settings.SHORTCODE,
+        "PartyB": 174379,            # Hardcoded (Must match BusinessShortCode)
         "PhoneNumber": formatted_phone,
-        "CallBackURL": settings.CALLBACK_URL,
+        "CallBackURL": settings.CALLBACK_URL, # Keep your ngrok URL here
         "AccountReference": "DjangoTest",
-        "TransactionDesc": "Payment via Django"
+        "TransactionDesc": "Payment"
     }
 
+    # try:
+    #     response = requests.post(api_url, json=payload, headers=headers)
+    #     # Always log response details to help diagnose 400/500s
+    #     try:
+    #         resp_json = response.json()
+    #     except Exception:
+    #         resp_json = None
+
+    #     if response.status_code >= 400:
+    #         print("STK Push Error:")
+    #         print("Status:", response.status_code)
+    #         print("Body (text):", response.text)
+    #         if resp_json:
+    #             print("Body (json):", json.dumps(resp_json, indent=2))
+    #         return {"error": "STK push failed", "status": response.status_code, "body": resp_json or response.text}
+
+    #     return resp_json or {"raw": response.text}
+
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Request Error: {e}")
+    #     return {"error": str(e)}
     try:
         response = requests.post(api_url, json=payload, headers=headers)
-        
-        # Check if the request was successful
         response.raise_for_status()
-        
         return response.json()
         
-    except requests.exceptions.JSONDecodeError:
-        # This catches the specific error you were getting
-        print("M-Pesa API Error (Non-JSON response):", response.text)
-        return {"error": "M-Pesa API returned invalid data (likely HTML)", "raw": response.text}
+    except requests.exceptions.HTTPError as e:
+        # --- THIS IS THE FIX ---
+        # Print the exact message from Safaricom (e.g., "Invalid Account Reference")
+        print("ERROR RESPONSE FROM SAFARICOM:")
+        print(response.text) 
+        return {"error": response.text} # Send this to your frontend so you can see it
         
-    except requests.exceptions.RequestException as e:
-        print(f"Request Error: {e}")
+    except Exception as e:
+        print(f"General Error: {e}")
         return {"error": str(e)}

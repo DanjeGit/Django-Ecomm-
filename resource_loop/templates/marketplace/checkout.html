@@ -14,7 +14,7 @@
             {% if ci.item.image %}
             <img src="{{ ci.item.image.url }}" style="width:100px;height:100px;object-fit:cover;" class="rounded" alt="{{ ci.item.title }}">
             {% else %}
-            <img src="{% static 'img/placeholder.jpg' %}" style="width:100px;height:100px;object-fit:cover;" class="rounded" alt="Placeholder">
+                <input type="tel" name="phone_number" class="form-control" placeholder="e.g. 07XXXXXXXX" value="{{ request.user.buyerprofile.phone_number|default:'' }}" required>
             {% endif %}
           </div>
           <div class="flex-grow-1">

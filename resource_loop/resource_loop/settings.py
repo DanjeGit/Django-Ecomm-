@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-k4ao826m*h$mhn$0_p66s54vw7t%xlt^2_62erftgx+35ub+xj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '.ngrok-free.app',
+    '127.0.0.1',
+    '.ngrok-free.dev',
+    'localhost'
+]
 
 # During local development, help avoid CSRF origin issues
 CSRF_TRUSTED_ORIGINS = [
@@ -142,16 +147,17 @@ LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
 
 #MPESA SETTINGS# settings.py
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
 
-# Replace these with the LONG strings you just used in test.py
 CONSUMER_KEY = os.getenv('CONSUMER_KEY')
 CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
-
 # Sandbox Defaults
-SHORTCODE = '174379' 
+# M-Pesa Sandbox credentials loaded from .env
+SHORTCODE = os.getenv('SHORTCODE', '174379')
 # This is the default Sandbox Passkey (do not change for Sandbox):
 PASSKEY = os.getenv('PASSKEY')
-CALLBACK_URL = 'https://mydomain.com/mpesa/callback' # Use ngrok for local testing
+CALLBACK_URL = os.getenv('CALLBACK_URL', '') # Public HTTPS callback URL (e.g., ngrok). Read from env.
 
 
 AUTHENTICATION_BACKENDS = [

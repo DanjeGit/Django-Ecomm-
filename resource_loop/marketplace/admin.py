@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, WasteItem, SellerProfile, BuyerProfile, Transaction
+from .models import Category, WasteItem, SellerProfile, BuyerProfile, Transaction, Order, OrderItem
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -25,9 +25,9 @@ class BuyerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'mpesa_name', 'phone_number', 'item', 'amount', 'state', 'created_at')
+    list_display = ('user', 'amount', 'state', 'merchant_request_id', 'checkout_request_id', 'created_at')
     list_filter = ('state', 'created_at')
-    search_fields = ('user__username', 'mpesa_name', 'phone_number', 'item__title')
+    search_fields = ('user__username', 'mpesa_name', 'phone_number', 'item__title', 'merchant_request_id', 'checkout_request_id')
     ordering = ('-created_at',)
     actions = ('mark_confirmed', 'mark_cancelled')
 
@@ -40,3 +40,14 @@ class TransactionAdmin(admin.ModelAdmin):
     def mark_cancelled(self, request, queryset):
         updated = queryset.update(state='cancelled')
         self.message_user(request, f"Marked {updated} transactions as cancelled.")
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order_uuid', 'user', 'status', 'total_amount', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('id', 'order_uuid', 'user__username')
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'item', 'quantity', 'price')
+    search_fields = ('order__id', 'item__title')

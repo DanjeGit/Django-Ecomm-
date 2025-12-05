@@ -29,15 +29,20 @@
                                         </div>
                                         <form action="{% url 'remove_from_cart' cart_item.id %}" method="post">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn-close" aria-label="Close"></button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
                                         </form>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                         <form action="{% url 'update_cart' cart_item.id %}" method="post" class="d-flex align-items-center">
                                             {% csrf_token %}
                                             <label for="quantity-{{cart_item.id}}" class="small me-2">Qty:</label>
-                                            <input type="number" name="quantity" value="{{ cart_item.quantity }}" min="1" class="form-control form-control-sm" style="width: 70px;" id="quantity-{{cart_item.id}}">
-                                            <button type="submit" class="btn btn-primary btn-sm ms-2">Update</button>
+                                            <div class="input-group input-group-sm" style="width: 140px;">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity-{{cart_item.id}}'); q.value=Math.max(1, parseInt(q.value||'1')-1); this.closest('form').submit();">–</button>
+                                                <input type="number" name="quantity" value="{{ cart_item.quantity }}" min="1" class="form-control text-center" id="quantity-{{cart_item.id}}">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity-{{cart_item.id}}'); q.value=parseInt(q.value||'1')+1; this.closest('form').submit();">+</button>
+                                            </div>
                                         </form>
                                         <div class="text-end">
                                             <div class="text-muted small">Item Total</div>
@@ -99,15 +104,20 @@
                                         </div>
                                         <form action="{% url 'remove_from_cart' sci.item.id %}" method="post">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn-close" aria-label="Close"></button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
                                         </form>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-3">
                                         <form action="{% url 'update_cart' sci.item.id %}" method="post" class="d-flex align-items-center">
                                             {% csrf_token %}
                                             <label for="quantity-guest-{{sci.item.id}}" class="small me-2">Qty:</label>
-                                            <input type="number" name="quantity" value="{{ sci.quantity }}" min="1" class="form-control form-control-sm" style="width: 70px;" id="quantity-guest-{{sci.item.id}}">
-                                            <button type="submit" class="btn btn-primary btn-sm ms-2">Update</button>
+                                            <div class="input-group input-group-sm" style="width: 140px;">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity-guest-{{sci.item.id}}'); q.value=Math.max(1, parseInt(q.value||'1')-1); this.closest('form').submit();">–</button>
+                                                <input type="number" name="quantity" value="{{ sci.quantity }}" min="1" class="form-control text-center" id="quantity-guest-{{sci.item.id}}">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity-guest-{{sci.item.id}}'); q.value=parseInt(q.value||'1')+1; this.closest('form').submit();">+</button>
+                                            </div>
                                         </form>
                                         <div class="text-end">
                                             <div class="text-muted small">Item Total</div>

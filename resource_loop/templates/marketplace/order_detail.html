@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Order #{{ order.id }}</h2>
+  <p>Status: <span class="badge bg-info">{{ order.get_status_display }}</span></p>
+  <p>Placed: {{ order.created_at|date:"M d, Y H:i" }}</p>
+  <p>
+    Order ID:
+    <code id="order-uuid">{{ order.order_uuid }}</code>
+    <button class="btn btn-sm btn-outline-secondary ms-2" type="button" onclick="navigator.clipboard.writeText(document.getElementById('order-uuid').innerText)">Copy</button>
+  </p>
+  <h5 class="mt-4">Items</h5>
+  <ul class="list-group mb-3">
+    {% for oi in order.items.all %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+          {% if oi.item %}
+            <a href="{{ oi.item.get_absolute_url }}">{{ oi.item.title }}</a>
+          {% else %}
+            Item (no longer available)
+          {% endif %}
+          <small class="text-muted">x{{ oi.quantity }}</small>
+        </span>
+        <span>KES {{ oi.price }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="d-flex justify-content-end">
+    <strong>Total: KES {{ order.total_amount }}</strong>
+  </div>
+</div>
+{% endblock %}

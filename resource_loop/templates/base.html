@@ -20,6 +20,9 @@
         .footer {
             background-color: #f8f9fa;
         }
+        .navbar{
+            background-color: #3070b4;
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -41,18 +44,10 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">Marketplace</a>
+                            <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">Marketplace</a>
                         </li>
                         <li class="nav-item">
-                            {% if user.is_authenticated %}
-                                {% if user.is_superuser %}
-                                    <a class="nav-link {% if '/dashboard/admin' in request.path %}active{% endif %}" href="{% url 'admin_dashboard' %}">Dashboard</a>
-                                {% else %}
-                                    <a class="nav-link {% if '/dashboard/user' in request.path %}active{% endif %}" href="{% url 'user_dashboard' %}">Dashboard</a>
-                                {% endif %}
-                            {% else %}
-                                <a class="nav-link {% if '/dashboard' in request.path %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                            {% endif %}
+                            <a class="nav-link {% if '/dashboard' in request.path %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if '/add-listing' in request.path %}active{% endif %}" href="{% url 'add_listing' %}">+ Sell Waste</a>
@@ -81,6 +76,7 @@
                                     {% else %}
                                         <li><a class="dropdown-item" href="{% url 'user_dashboard' %}">Dashboard</a></li>
                                         <li><a class="dropdown-item" href="{% url 'my_account' %}">My Account</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'order_list' %}">My Orders</a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li>

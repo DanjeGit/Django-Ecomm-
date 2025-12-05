@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .models import WasteItem, Category, Cart, CartItem, BuyerProfile, SellerProfile
-from .models import Transaction
+from .models import Transaction, Order, OrderItem
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -278,6 +278,16 @@ def purchase_history(request):
     return render(request, 'marketplace/history.html', context)
 
 @login_required
+def order_list(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'marketplace/orders_list.html', {'orders': orders})
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'marketplace/order_detail.html', {'order': order})
+
+@login_required
 def payment_status(request):
     pending = Transaction.objects.filter(user=request.user, state='pending').count()
     confirmed = Transaction.objects.filter(user=request.user, state='confirmed').count()
@@ -408,16 +418,14 @@ def edit_profile_view(request):
 @csrf_exempt
 def initiate_payment(request):
     if request.method == "POST":
-        # 1. Get the phone number (handle cases where profile might not exist)
-        try:
-            phone = request.user.buyerprofile.phone_number
-        except AttributeError:
-            return JsonResponse({"error": "User does not have a linked phone number"}, status=400)
-
-        # Allow overriding phone from the checkout form
+        # 1. Prefer phone from form; fallback to profile if present
         form_phone = request.POST.get("phone_number")
-        if form_phone:
-            phone = form_phone
+        profile_phone = None
+        try:
+            profile_phone = request.user.buyerprofile.phone_number
+        except AttributeError:
+            profile_phone = None
+        phone = form_phone or profile_phone
 
         # 2. Get the amount: prefer server-side cart total to avoid tampering
         amount = request.POST.get("amount")
@@ -432,27 +440,52 @@ def initiate_payment(request):
 
         # 3. Validate inputs
         if not phone or not amount:
-            return JsonResponse({"error": "Missing phone or amount"}, status=400)
+            return JsonResponse({"error": "Phone number is required. Please enter your M-Pesa phone."}, status=400)
+
+        # Optionally persist provided phone if profile exists and is empty
+        if form_phone and not profile_phone:
+            try:
+                bp = getattr(request.user, 'buyerprofile', None)
+                if bp:
+                    bp.phone_number = form_phone
+                    bp.save(update_fields=['phone_number'])
+            except Exception:
+                pass
 
         # 4. Call the utility function
         # The logic is now safely inside utils.py so this view stays clean
         result = stk_push(amount, phone)
 
-        # Immediately record "pending" transactions per cart item
-        try:
-            cart_items = cart.items.select_related('item').all()
-        except Exception:
-            cart_items = []
-        mpesa_name = request.user.get_full_name() or request.user.username
+        # Create a single Order and OrderItems snapshot to avoid duplicates
+        cart_items = cart.items.select_related('item').all()
+        order = Order.objects.create(user=request.user, total_amount=cart.get_total_price(), status='payment_pending')
         for ci in cart_items:
-            Transaction.objects.create(
-                user=request.user,
-                mpesa_name=mpesa_name,
-                phone_number=phone,
-                item=ci.item,
-                amount=ci.item.price * ci.quantity,
-                state='pending',
-            )
+            OrderItem.objects.create(order=order, item=ci.item, quantity=ci.quantity, price=ci.item.price)
+
+        # Create one Transaction linked to the order with STK identifiers
+        mpesa_name = request.user.get_full_name() or request.user.username
+        # If STK push failed, cancel order and return error
+        if result.get('error'):
+            order.status = 'cancelled'
+            order.save()
+            return JsonResponse(result, status=result.get('status') or 400)
+
+        checkout_id = result.get('CheckoutRequestID') or (result.get('data') or {}).get('CheckoutRequestID')
+        merchant_id = result.get('MerchantRequestID') or (result.get('data') or {}).get('MerchantRequestID')
+        # Guard: avoid duplicates if a pending transaction already exists for this order
+        tx, created_tx = Transaction.objects.get_or_create(
+            order=order,
+            checkout_request_id=checkout_id,
+            defaults={
+                'user': request.user,
+                'mpesa_name': mpesa_name,
+                'phone_number': phone,
+                'item': None,
+                'amount': order.total_amount,
+                'state': 'pending',
+                'merchant_request_id': merchant_id,
+            }
+        )
 
         # 5. Check if utils returned an internal error
         if "error" in result:
@@ -478,6 +511,7 @@ def mpesa_callback(request):
             body = callback_data.get('Body', {})
             stk_cb = body.get('stkCallback', {})
             result_code = stk_cb.get('ResultCode')
+            checkout_request_id = stk_cb.get('CheckoutRequestID')
             metadata = stk_cb.get('CallbackMetadata', {})
             items = metadata.get('Item', []) if isinstance(metadata, dict) else []
 
@@ -504,20 +538,35 @@ def mpesa_callback(request):
                 except BuyerProfile.DoesNotExist:
                     user = None
 
-            # Update existing pending transactions based on payment result
-            if user:
-                qs = Transaction.objects.filter(user=user, state='pending')
-                if result_code == 0:
-                    qs.update(state='confirmed', mpesa_name=(mpesa_name or user.get_full_name() or user.username), phone_number=(phone or ''))
-                    # Clear cart after confirmation
-                    try:
-                        cart = Cart.objects.get(user=user)
-                        cart.items.all().delete()
-                    except Cart.DoesNotExist:
-                        pass
-                else:
-                    # Mark all pending as cancelled when payment fails
-                    qs.update(state='cancelled', mpesa_name=(mpesa_name or user.get_full_name() or user.username), phone_number=(phone or ''))
+            # Update the single transaction and its order based on result
+            if checkout_request_id:
+                tx = Transaction.objects.filter(checkout_request_id=checkout_request_id).first()
+
+                if tx:
+                    if result_code == 0:
+                        tx.state = 'confirmed'
+                        tx.mpesa_name = mpesa_name or (user.get_full_name() if user else '')
+                        tx.phone_number = phone or tx.phone_number
+                        tx.save()
+                        # Update order status to placed
+                        if tx.order:
+                            tx.order.status = 'placed'
+                            tx.order.save()
+                        # Clear cart after confirmation
+                        try:
+                            if user:
+                                cart = Cart.objects.get(user=user)
+                                cart.items.all().delete()
+                        except Cart.DoesNotExist:
+                            pass
+                    else:
+                        tx.state = 'cancelled'
+                        tx.mpesa_name = mpesa_name or (user.get_full_name() if user else '')
+                        tx.phone_number = phone or tx.phone_number
+                        tx.save()
+                        if tx.order:
+                            tx.order.status = 'cancelled'
+                            tx.order.save()
 
             return JsonResponse({"ResultCode": 0, "ResultDesc": "Callback received"})
             
