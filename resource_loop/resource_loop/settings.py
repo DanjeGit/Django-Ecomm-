@@ -133,6 +133,31 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+
+import dj_database_url
+import os
+
+# ... (keep your existing STATIC_URL) ...
+
+# 1. STATIC FILES CONFIGURATION (For Whitenoise)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# 2. DATABASE CONFIGURATION (Switches to Postgres on Render)
+if 'RENDER' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    }
+    DEBUG = False # Disable Debug in production
+    ALLOWED_HOSTS = ['*'] # Allow Render.com to host your site
+else:
+    # Keep using SQLite locally
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # Media files (User uploaded images)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
