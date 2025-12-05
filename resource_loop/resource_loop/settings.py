@@ -144,13 +144,13 @@ LOGOUT_REDIRECT_URL = 'index'
 #MPESA SETTINGS# settings.py
 
 # Replace these with the LONG strings you just used in test.py
-CONSUMER_KEY = 'xpdi3E0g58XXYNC3qBrv0cgNT7PBqFwUoKfOi2H9EsJAXiJv' 
-CONSUMER_SECRET = 'qAerVKtk86VfeBPbXIGWCYQ5u0G8CwRFhZ85nC2qh5zuCAUG3QogshwdLTJsnONV'
+CONSUMER_KEY = os.getenv('CONSUMER_KEY')
+CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
 
 # Sandbox Defaults
 SHORTCODE = '174379' 
 # This is the default Sandbox Passkey (do not change for Sandbox):
-PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919' 
+PASSKEY = os.getenv('PASSKEY')
 CALLBACK_URL = 'https://mydomain.com/mpesa/callback' # Use ngrok for local testing
 
 
