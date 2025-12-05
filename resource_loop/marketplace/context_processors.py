@@ -8,5 +8,10 @@ def cart_count(request):
         except Cart.DoesNotExist:
             count = 0
     else:
-        count = 0
+        # Support guest carts stored in session
+        session_cart = request.session.get('cart', {})
+        try:
+            count = sum(int(qty) for qty in session_cart.values())
+        except Exception:
+            count = 0
     return {'cart_item_count': count}
