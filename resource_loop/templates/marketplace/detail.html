@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container pt-4">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none text-muted">Home</a></li><li class="breadcrumb-item active">{{ item.title }}</li></ol></nav>
+    <div class="row g-4">
+        <div class="col-lg-9">
+            <div class="bg-white p-4 rounded shadow-sm border mb-4">
+                <div class="row g-5">
+                    <div class="col-md-5">
+                        <div class="border rounded p-3 d-flex align-items-center justify-content-center" style="height: 350px;">
+                            {% if item.image %}<img src="{{ item.image.url }}" class="img-fluid" style="max-height:100%">{% else %}<img src="https://placehold.co/400" class="img-fluid">{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        {% if item.is_verified_seller %}<span class="badge bg-primary mb-2">VERIFIED SELLER</span>{% endif %}
+                        <h1 class="h3 fw-bold mb-2">{{ item.title }}</h1>
+                        <div class="mb-3 text-warning small"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><span class="text-muted ms-2">({{ item.reviews_count }} Ratings)</span></div>
+                        <h2 class="display-6 fw-bold text-primary-green">KES {{ item.price }}</h2>
+                        <div class="bg-light border border-success rounded p-3 my-4 d-flex align-items-center">
+                            <i class="fa-solid fa-leaf fa-2x text-success me-3"></i>
+                            <div><h6 class="fw-bold mb-0">Eco Impact</h6><p class="small mb-0">Saves <strong>{{ item.co2_saved_kg }}kg</strong> CO2</p></div>
+                        </div>
+                        <button class="btn btn-primary-custom btn-lg w-100 shadow"><i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded shadow-sm border p-4">
+                <h5 class="fw-bold border-bottom pb-2">Description</h5>
+                <p class="text-secondary">{{ item.description|linebreaks }}</p>
+                {% if item.specifications %}
+                <h5 class="fw-bold border-bottom pb-2 mt-4">Specifications</h5>
+                <pre class="bg-light p-3 rounded">{{ item.specifications }}</pre>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                <h6 class="small fw-bold text-muted text-uppercase mb-3">Delivery</h6>
+                <div class="d-flex mb-2"><i class="fa-solid fa-truck text-success me-2"></i><div class="small fw-bold">Door Delivery</div></div>
+                <div class="small text-muted ps-4">Ready by tomorrow.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

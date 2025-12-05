@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    /* Full-width Hero background */
+    .hero-wrapper {
+        width: 100%;
+        background: linear-gradient(
+            rgba(0, 0, 0, 0.55), 
+            rgba(0, 0, 0, 0.55)
+        ),
+       url("{% static '/img/royBg.jpg' %}") center/cover no-repeat;
+        padding: 120px 20px;
+        text-align: center;
+       background-size: 100% 100%;
+    }
+
+    /* Hero Text */
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #fff;
+        text-shadow: 0px 2px 6px rgba(0,0,0,.4);
+    }
+
+    .hero-sub {
+        font-size: 1.2rem;
+        color: #e9e9e9;
+        max-width: 750px;
+        margin: auto;
+    }
+
+    /* Search Bar Enhancements */
+    .search-bar {
+        max-width: 720px;
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0px 3px 20px rgba(0,0,0,0.25);
+    }
+    .search-bar input {
+        padding: 14px 24px;
+        border: none;
+    }
+    .search-btn-green {
+        background: #06ff8a;
+        font-weight: 700;
+        color: #000;
+    }
+    .search-btn-green:hover {
+        background: #00e676;
+        color: #000;
+    }
+
+    /* Filter pills */
+    .cat-pill {
+        border-radius: 30px !important;
+        padding: 6px 16px !important;
+        font-weight: 600;
+    }
+
+    .cat-pill-active {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+    /* Item section background */
+    .section-light {
+        background: #ffffff;
+        padding-bottom: 60px;
+        padding-top: 40px;
+        width: 100%;
+    }
+    #items-section {
+        width: 100%;
+        height: 100%;
+      
+       
+    }
+
+</style>
+
+
+<div class="container-fluid px-0">
+
+    <!-- ★ HERO SECTION ★ -->
+    <div class="hero-wrapper mt-4 ">
+
+        <h1 class="hero-title">
+            Transform <span style="color:#00e676;">Waste</span> into
+            <span style="color:#ffeb3b;">Worth</span>
+        </h1>
+
+        <p class="hero-sub mt-3 mb-4">
+            Be part of a greener future. Discover, trade, and repurpose industrial materials—helping
+            businesses save costs while protecting our planet.
+        </p>
+
+        <form action="{% url 'search' %}" method="get" class="d-flex justify-content-center mt-4">
+            <div class="input-group search-bar">
+                <input name="q" class="form-control" 
+                       placeholder="Search for pallets, metal scraps, off-cuts..." />
+                <button class="btn search-btn-green px-4" type="submit">
+                    Search
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+
+    <!-- ★ CATEGORY + ITEMS SECTION ★ -->
+    <div class="container-fluid section-light mt-4 w-100 h-100" id="items-section">
+
+        <!-- Category section -->
+        <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+            <a href="{% url 'index' %}" class="btn btn-sm cat-pill cat-pill-active">All Items</a>
+
+            <a href="{% url 'search' %}?category=wood" class="btn btn-sm btn-outline-secondary cat-pill">Wood</a>
+            <a href="{% url 'search' %}?category=metal" class="btn btn-sm btn-outline-secondary cat-pill">Metal</a>
+            <a href="{% url 'search' %}?category=textile" class="btn btn-sm btn-outline-secondary cat-pill">Textile</a>
+            <a href="{% url 'search' %}?category=construction" class="btn btn-sm btn-outline-secondary cat-pill">
+                Construction
+            </a>
+
+            {% for cat in categories %}
+                {% if cat.slug not in 'wood metal textile construction' %}
+                    <a href="{% url 'search' %}?category={{ cat.slug }}" 
+                       class="btn btn-sm btn-outline-secondary cat-pill">{{ cat.name }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Items Grid -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4 mb-3">
+            {% for item in recent_items %}
+                <div class="col">
+                    {% include 'marketplace/item_card.html' with item=item %}
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <p class="text-muted text-center">No items available yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

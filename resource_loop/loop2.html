@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReSource Loop | Waste-to-Wealth Marketplace</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        eco: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            800: '#166534',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+
+    <!-- NAVIGATION BAR -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="app.navigate('marketplace')">
+                        <i class="fa-solid fa-recycle text-eco-600 text-3xl"></i>
+                        <span class="font-bold text-xl text-gray-800 tracking-tight">ReSource<span class="text-eco-600">Loop</span></span>
+                    </div>
+                </div>
+                <!-- Nav Links -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <button onclick="app.navigate('marketplace')" id="nav-market" class="text-gray-900 font-medium px-3 py-2 rounded-md hover:bg-eco-50 hover:text-eco-600 transition">Marketplace</button>
+                    <button onclick="app.navigate('dashboard')" id="nav-dash" class="text-gray-500 font-medium px-3 py-2 rounded-md hover:bg-eco-50 hover:text-eco-600 transition">Impact Dashboard</button>
+                    <button onclick="app.navigate('add-listing')" class="bg-eco-600 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-eco-800 shadow-md transition transform hover:scale-105">+ Sell Waste</button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button class="text-gray-500 hover:text-gray-900 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main id="app-root" class="flex-grow">
+        <!-- Views will be injected here by JavaScript -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-800 text-white py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-400 text-sm">© 2024 ReSource Loop. Aligned with SDG 12: Responsible Consumption.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- MOCK DATA (Simulating Django Database) ---
+        const db = {
+            user: {
+                name: "EcoBuilders Ltd",
+                total_earnings: 1240.00,
+                co2_saved: 450,
+                items_sold: 12
+            },
+            items: [
+                {
+                    id: 1,
+                    title: "Teak Wood Off-cuts",
+                    description: "High quality teak scraps from furniture manufacturing. Perfect for small crafts or biomass.",
+                    category: "Wood",
+                    price: 45.00,
+                    quantity: "50 kg",
+                    location: "Nairobi Industrial Area",
+                    co2_factor: 0.6, // kg CO2 saved per unit
+                    image: "https://images.unsplash.com/photo-1543857182-68106299b6b2?auto=format&fit=crop&q=80&w=600",
+                    tag: "Raw Material"
+                },
+                {
+                    id: 2,
+                    title: "Surplus Ceramic Tiles",
+                    description: "Leftover white ceramic tiles from a hotel project. Approx 15 boxes intact.",
+                    category: "Construction",
+                    price: 120.00,
+                    quantity: "15 boxes",
+                    location: "Westlands",
+                    co2_factor: 10,
+                    image: "https://images.unsplash.com/photo-1596667926102-12f5a60a777d?auto=format&fit=crop&q=80&w=600",
+                    tag: "Reusable"
+                },
+                {
+                    id: 3,
+                    title: "Copper Wire Scraps",
+                    description: "Stripped copper wire. 99% pure. Great for recycling or electrical projects.",
+                    category: "Metal",
+                    price: 200.00,
+                    quantity: "10 kg",
+                    location: "Mombasa Rd",
+                    co2_factor: 8.5,
+                    image: "https://images.unsplash.com/photo-1543857182-68106299b6b2?auto=format&fit=crop&q=80&w=600",
+                    tag: "Recyclable"
+                },
+                {
+                    id: 4,
+                    title: "Pallet Wood (Heat Treated)",
+                    description: "Standard EUR pallets. Slightly weathered but structurally sound.",
+                    category: "Wood",
+                    price: 15.00,
+                    quantity: "20 pallets",
+                    location: "Thika",
+                    co2_factor: 3,
+                    image: "https://images.unsplash.com/photo-1543857182-68106299b6b2?auto=format&fit=crop&q=80&w=600",
+                    tag: "Reusable"
+                },
+                {
+                    id: 5,
+                    title: "Denim Fabric Trimmings",
+                    description: "Blue denim off-cuts from jeans factory. 100% cotton.",
+                    category: "Textile",
+                    price: 30.00,
+                    quantity: "25 kg",
+                    location: "Athiriver",
+                    co2_factor: 1.0,
+                    image: "https://images.unsplash.com/photo-1543857182-68106299b6b2?auto=format&fit=crop&q=80&w=600",
+                    tag: "Upcyclable"
+                }
+            ],
+            transactions: [
+                { title: "50kg Pine Off-cuts", buyer: "GreenFurniture Co.", date: "Oct 24, 2024", co2: 85, price: 50.00 },
+                { title: "200 Glass Bottles", buyer: "Local Art Studio", date: "Oct 20, 2024", co2: 40, price: 25.00 },
+                { title: "Steel Rebar Remnants", buyer: "BuildSafe Ltd", date: "Oct 15, 2024", co2: 120, price: 150.00 },
+            ]
+        };
+
+        // --- APP CONTROLLER ---
+        const app = {
+            root: document.getElementById('app-root'),
+
+            navigate: (viewName) => {
+                // Update Nav States
+                document.querySelectorAll('nav button').forEach(btn => btn.classList.replace('text-gray-900', 'text-gray-500'));
+                if(viewName === 'marketplace') document.getElementById('nav-market').classList.replace('text-gray-500', 'text-gray-900');
+                if(viewName === 'dashboard') document.getElementById('nav-dash').classList.replace('text-gray-500', 'text-gray-900');
+
+                // Render View
+                if (viewName === 'marketplace') app.renderMarketplace();
+                else if (viewName === 'dashboard') app.renderDashboard();
+                else if (viewName === 'add-listing') app.renderAddListing();
+            },
+
+            renderMarketplace: () => {
+                const itemsHtml = db.items.map(item => `
+                    <div class="group bg-white rounded-xl shadow-sm hover:shadow-xl transition duration-300 overflow-hidden border border-gray-100 flex flex-col h-full cursor-pointer">
+                        <div class="relative h-56 overflow-hidden">
+                            <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                            <span class="absolute top-3 right-3 bg-white/95 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-gray-700 shadow-sm border border-gray-100">
+                                ${item.tag}
+                            </span>
+                        </div>
+                        <div class="p-5 flex-1 flex flex-col">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold text-eco-600 bg-eco-50 px-2 py-1 rounded-full uppercase tracking-wide border border-eco-100">${item.category}</span>
+                                <span class="text-xs text-gray-500 flex items-center"><i class="fa-solid fa-location-dot mr-1"></i> ${item.location}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 leading-tight group-hover:text-eco-600 transition">${item.title}</h3>
+                            <p class="text-sm text-gray-500 mb-4 line-clamp-2">${item.description}</p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100">
+                                <div class="flex justify-between items-end mb-3">
+                                    <div>
+                                        <span class="block text-xs text-gray-400 uppercase font-semibold">Price</span>
+                                        <span class="text-xl font-bold text-gray-900">$${item.price.toFixed(2)}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="block text-xs text-gray-400 uppercase font-semibold">Qty</span>
+                                        <span class="text-sm font-medium text-gray-700">${item.quantity}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- INNOVATION HIGHLIGHT: IMPACT SCORE -->
+                                <div class="bg-gradient-to-r from-eco-50 to-emerald-50 border border-eco-100 rounded-lg p-2 flex items-center gap-3">
+                                    <div class="bg-white p-1.5 rounded-full shadow-sm text-eco-600">
+                                        <i class="fa-solid fa-leaf text-lg"></i>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-eco-800 uppercase tracking-wider">Impact Score</span>
+                                        <span class="text-xs text-eco-700">Saves ~<strong>${item.co2_factor * 10} kg</strong> CO2</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                app.root.innerHTML = `
+                    <div class="fade-in">
+                        <!-- Hero Section -->
+                        <div class="bg-gray-900 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-eco-900 opacity-90"></div>
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+                            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 text-center">
+                                <h1 class="text-4xl font-extrabold text-white sm:text-5xl tracking-tight mb-4">
+                                    Turn Waste into <span class="text-eco-400">Opportunity</span>
+                                </h1>
+                                <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+                                    Join the circular economy. Buy and sell industrial off-cuts and materials to reduce landfill waste.
+                                </p>
+                                <div class="max-w-xl mx-auto bg-white rounded-full p-2 flex shadow-2xl">
+                                    <input type="text" placeholder="Search for pallets, metal scraps..." class="flex-grow px-6 py-2 rounded-l-full focus:outline-none text-gray-700">
+                                    <button class="bg-eco-600 text-white px-8 py-2 rounded-full font-bold hover:bg-eco-700 transition">Search</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Grid -->
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                            <div class="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                                <button class="bg-gray-900 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">All Items</button>
+                                <button class="bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-semibold border border-gray-200 hover:bg-gray-50 whitespace-nowrap shadow-sm">Wood</button>
+                                <button class="bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-semibold border border-gray-200 hover:bg-gray-50 whitespace-nowrap shadow-sm">Metal</button>
+                                <button class="bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-semibold border border-gray-200 hover:bg-gray-50 whitespace-nowrap shadow-sm">Textile</button>
+                                <button class="bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-semibold border border-gray-200 hover:bg-gray-50 whitespace-nowrap shadow-sm">Construction</button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderDashboard: () => {
+                const recentSalesHtml = db.transactions.map(t => `
+                    <li class="px-6 py-4 hover:bg-gray-50 transition border-b border-gray-100 last:border-0">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col">
+                                <p class="text-sm font-bold text-eco-700 truncate">${t.title}</p>
+                                <p class="text-xs text-gray-500">Buyer: ${t.buyer} • ${t.date}</p>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800 mb-1">Sold</span>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fa-solid fa-leaf text-eco-500 mr-1"></i> Saved ${t.co2}kg CO2
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                `).join('');
+
+                app.root.innerHTML = `
+                    <div class="fade-in max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 class="text-3xl font-bold text-gray-900">Impact Dashboard</h2>
+                                <p class="text-gray-500">Track your contribution to SDG 12 (Responsible Consumption).</p>
+                            </div>
+                            <div class="bg-eco-100 text-eco-800 px-4 py-2 rounded-lg text-sm font-bold">
+                                <i class="fa-solid fa-id-badge mr-2"></i> User: ${db.user.name}
+                            </div>
+                        </div>
+                        
+                        <!-- KPI Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <!-- Card 1: CO2 -->
+                            <div class="bg-gradient-to-br from-eco-500 to-emerald-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                                <i class="fa-solid fa-earth-africa absolute -right-4 -bottom-4 text-9xl text-white opacity-10"></i>
+                                <div class="relative z-10">
+                                    <p class="text-eco-100 font-medium mb-1">Total CO2 Saved</p>
+                                    <h3 class="text-4xl font-extrabold mb-2">${db.user.co2_saved} <span class="text-lg font-normal">kg</span></h3>
+                                    <div class="inline-flex items-center bg-white/20 px-2 py-1 rounded text-xs backdrop-blur-sm">
+                                        <i class="fa-solid fa-tree mr-1"></i> Equiv. to planting 20 trees
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Earnings -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-500 font-medium mb-1">Total Revenue</p>
+                                        <h3 class="text-4xl font-extrabold text-gray-900">$${db.user.total_earnings.toLocaleString()}</h3>
+                                    </div>
+                                    <div class="bg-blue-50 p-3 rounded-full text-blue-600">
+                                        <i class="fa-solid fa-wallet text-xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-green-600 font-bold mt-4"><i class="fa-solid fa-arrow-trend-up"></i> +12% from last month</p>
+                            </div>
+
+                            <!-- Card 3: Items -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="text-gray-500 font-medium mb-1">Waste Diverted</p>
+                                        <h3 class="text-4xl font-extrabold text-gray-900">${db.user.items_sold} <span class="text-lg font-normal">items</span></h3>
+                                    </div>
+                                    <div class="bg-orange-50 p-3 rounded-full text-orange-600">
+                                        <i class="fa-solid fa-trash-can-arrow-up text-xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-4">Kept out of landfills</p>
+                            </div>
+                        </div>
+
+                        <!-- Charts & Tables Split -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <!-- Chart Placeholder -->
+                            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h3 class="text-lg font-bold text-gray-900 mb-6">Impact Trends (2024)</h3>
+                                <!-- Simple CSS Bar Chart -->
+                                <div class="flex items-end space-x-4 h-64 pb-4 border-b border-gray-100">
+                                    <div class="flex-1 flex flex-col items-center group">
+                                        <div class="w-full bg-eco-100 rounded-t-lg relative h-[40%] group-hover:bg-eco-200 transition"></div>
+                                        <span class="text-xs text-gray-400 mt-2">Aug</span>
+                                    </div>
+                                    <div class="flex-1 flex flex-col items-center group">
+                                        <div class="w-full bg-eco-100 rounded-t-lg h-[60%] group-hover:bg-eco-200 transition"></div>
+                                        <span class="text-xs text-gray-400 mt-2">Sep</span>
+                                    </div>
+                                    <div class="flex-1 flex flex-col items-center group">
+                                        <div class="w-full bg-eco-100 rounded-t-lg h-[50%] group-hover:bg-eco-200 transition"></div>
+                                        <span class="text-xs text-gray-400 mt-2">Oct</span>
+                                    </div>
+                                    <div class="flex-1 flex flex-col items-center group">
+                                        <div class="w-full bg-eco-500 rounded-t-lg h-[85%] shadow-lg shadow-eco-200"></div>
+                                        <span class="text-xs font-bold text-gray-800 mt-2">Nov</span>
+                                    </div>
+                                    <div class="flex-1 flex flex-col items-center group">
+                                        <div class="w-full bg-eco-100 rounded-t-lg h-[30%] group-hover:bg-eco-200 transition"></div>
+                                        <span class="text-xs text-gray-400 mt-2">Dec</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Transactions -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                                    <h3 class="text-lg font-bold text-gray-900">Recent Sales</h3>
+                                </div>
+                                <ul class="divide-y divide-gray-100">
+                                    ${recentSalesHtml}
+                                </ul>
+                                <div class="px-6 py-4 bg-gray-50 text-center">
+                                    <button class="text-sm text-eco-600 font-bold hover:text-eco-800">View All Transactions</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderAddListing: () => {
+                app.root.innerHTML = `
+                    <div class="fade-in max-w-2xl mx-auto px-4 py-12">
+                        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-6">List Waste Item</h2>
+                            <form onsubmit="event.preventDefault(); app.navigate('marketplace');" class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Title</label>
+                                    <input type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-eco-500 focus:outline-none" placeholder="e.g. 50kg Pine Scraps">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-eco-500 focus:outline-none">
+                                            <option>Wood</option>
+                                            <option>Metal</option>
+                                            <option>Textile</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                                        <input type="number" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-eco-500 focus:outline-none" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <textarea rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-eco-500 focus:outline-none"></textarea>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-lg flex gap-3">
+                                    <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                                    <p class="text-sm text-blue-800">Our system will automatically calculate the CO2 savings based on the category and weight you provide.</p>
+                                </div>
+                                <button type="submit" class="w-full bg-eco-600 text-white font-bold py-3 rounded-lg hover:bg-eco-700 transition shadow-md">Post Listing</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        // Initialize App
+        app.navigate('marketplace');
+    </script>
+</body>
+</html>

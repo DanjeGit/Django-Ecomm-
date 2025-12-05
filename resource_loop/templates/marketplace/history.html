@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+  <h3 class="mb-4">Purchase History</h3>
+  {% if transactions %}
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Item</th>
+          <th scope="col">Amount (KSh)</th>
+          <th scope="col">MPESA Name</th>
+          <th scope="col">Phone</th>
+          <th scope="col">State</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tx in transactions %}
+        <tr>
+          <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+          <td>
+            {% if tx.item %}
+              <a class="text-decoration-none" href="{% url 'item_detail' tx.item.slug %}">{{ tx.item.title }}</a>
+            {% else %}
+              <span class="text-muted">(Item unavailable)</span>
+            {% endif %}
+          </td>
+          <td>{{ tx.amount|floatformat:2 }}</td>
+          <td>{{ tx.mpesa_name }}</td>
+          <td>{{ tx.phone_number }}</td>
+          <td>
+            {% if tx.state == 'confirmed' %}
+              <span class="badge bg-success">Confirmed</span>
+            {% elif tx.state == 'cancelled' %}
+              <span class="badge bg-danger">Cancelled</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ tx.state }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-muted">No transactions yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

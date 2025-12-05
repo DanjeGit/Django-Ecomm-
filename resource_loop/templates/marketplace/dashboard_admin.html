@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Admin Dashboard</h3>
+    <span class="badge bg-dark">Today: {{ now|default:"" }}</span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0">Users</h6>
+            <i class="fa-regular fa-user fs-5 text-secondary"></i>
+          </div>
+          <div class="display-6 fw-bold mt-2">{{ total_users }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0">Items</h6>
+            <i class="fa-solid fa-box fs-5 text-secondary"></i>
+          </div>
+          <div class="display-6 fw-bold mt-2">{{ total_items }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0">Categories</h6>
+            <i class="fa-solid fa-layer-group fs-5 text-secondary"></i>
+          </div>
+          <div class="display-6 fw-bold mt-2">{{ total_categories }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0">Sellers / Buyers</h6>
+            <i class="fa-solid fa-people-group fs-5 text-secondary"></i>
+          </div>
+          <div class="display-6 fw-bold mt-2">{{ sellers }} / {{ buyers }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Top Categories + Analytics Placeholder -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="mb-3">Top Categories</h6>
+          <ul class="list-group list-group-flush mb-3">
+            {% for cat in top_categories %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-tag text-secondary me-2"></i>{{ cat.name }}</span>
+                <span class="badge bg-primary rounded-pill">{{ cat.item_count }}</span>
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">No categories yet.</li>
+            {% endfor %}
+          </ul>
+          <div class="border rounded p-3" style="height: 280px;">
+            <canvas id="topCategoriesChart"
+              data-labels='[{% for cat in top_categories %}"{{ cat.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}]'
+              data-values='[{% for cat in top_categories %}{{ cat.item_count }}{% if not forloop.last %}, {% endif %}{% endfor %}]'
+              style="width: 100%; height: 240px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Items Image Gallery -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Recent Items</h6>
+            <span class="text-muted small">Showing latest {{ recent_items|length }}</span>
+          </div>
+          <div class="row g-3">
+            {% for item in recent_items %}
+              <div class="col-6 col-md-4">
+                <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none">
+                  <div class="position-relative" style="height: 120px; overflow: hidden; border-radius: 10px;">
+                    {% if item.image %}
+                      <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width:100%; height:100%; object-fit: cover;">
+                    {% else %}
+                      <div class="bg-light d-flex align-items-center justify-content-center" style="width:100%; height:100%;">
+                        <span class="text-muted small">No image</span>
+                      </div>
+                    {% endif %}
+                    <span class="badge bg-white text-dark position-absolute" style="top:6px; left:6px;">{{ item.category.name|default:"" }}</span>
+                  </div>
+                  <div class="mt-2">
+                    <div class="small text-dark fw-semibold">{{ item.title|truncatechars:34 }}</div>
+                    <div class="text-muted small">KSh {{ item.price|floatformat:2 }}</div>
+                  </div>
+                </a>
+              </div>
+            {% empty %}
+              <div class="col-12"><p class="text-muted">No recent items.</p></div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function() {
+    const ctx = document.getElementById('topCategoriesChart');
+    if (!ctx) return;
+    const labels = JSON.parse(ctx.getAttribute('data-labels') || '[]');
+    const data = JSON.parse(ctx.getAttribute('data-values') || '[]');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Items per Category',
+          data: data,
+          backgroundColor: '#067bf8',
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+      }
+    });
+  })();
+</script>
+{% endblock %}

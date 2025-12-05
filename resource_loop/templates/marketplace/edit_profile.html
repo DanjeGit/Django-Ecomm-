@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">Edit Profile</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <fieldset>
+                            <legend class="mb-3">User Details</legend>
+                            {{ user_form.as_p }}
+                        </fieldset>
+                        <fieldset class="mt-4">
+                            <legend class="mb-3">Profile Details</legend>
+                            {{ profile_form.as_p }}
+                        </fieldset>
+                        <button type="submit" class="btn btn-primary mt-4">Save Changes</button>
+                        <a href="{% url 'my_account' %}" class="btn btn-secondary mt-4">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

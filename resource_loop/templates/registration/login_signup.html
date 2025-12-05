@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <ul class="nav nav-tabs nav-justified" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if not user_form.errors and not profile_form.errors %}active{% endif %}" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="{% if not user_form.errors and not profile_form.errors %}true{% else %}false{% endif %}">Login</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if user_form.errors or profile_form.errors %}active{% endif %}" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab" aria-controls="signup" aria-selected="{% if user_form.errors or profile_form.errors %}true{% else %}false{% endif %}">Sign Up</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- Login Tab -->
+                        <div class="tab-pane fade {% if not user_form.errors and not profile_form.errors %}show active{% endif %}" id="login" role="tabpanel" aria-labelledby="login-tab">
+                            <h4 class="card-title text-center fw-bold mb-4">Welcome Back</h4>
+                            <form method="post" action="{% url 'login' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="loginUsername" class="form-label">Username</label>
+                                    <input type="text" name="username" class="form-control" id="loginUsername" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="loginPassword" class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control" id="loginPassword" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Login</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- Signup Tab -->
+                        <div class="tab-pane fade {% if user_form.errors or profile_form.errors %}show active{% endif %}" id="signup" role="tabpanel" aria-labelledby="signup-tab">
+                            <h4 class="card-title text-center fw-bold mb-4">Create Account</h4>
+                            <form method="post" action="{% url 'signup' %}">
+                                {% csrf_token %}
+                                
+                                {% for field in user_form %}
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {% if field.name == 'password' %}
+                                        <div class="input-group">
+                                            {{ field }}
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="fa fa-eye" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                    
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                   
+                                </div>
+                                {% endfor %}
+                        
+                                {% for field in profile_form %}
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                  
+                                </div>
+                                {% endfor %}
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Sign Up</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle functionality
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#id_password'); // Django's default ID for the password field in a form
+
+    if (togglePassword && password) {
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            // Toggle the eye icon
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    }
+
+    // Tab handling
+    const authTabs = document.querySelectorAll('#authTabs button[data-bs-toggle="tab"]');
+    authTabs.forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function (event) {
+            // Update URL hash without adding to browser history
+            history.replaceState(null, null, event.target.dataset.bsTarget);
+        });
+    });
+
+    // On page load, show tab based on hash
+    let hash = window.location.hash;
+    if (hash) {
+        let tabToActivate = document.querySelector('#authTabs button[data-bs-target="' + hash + '"]');
+        if (tabToActivate) {
+            let tab = new bootstrap.Tab(tabToActivate);
+            tab.show();
+        }
+    }
+});
+</script>
+{% endblock %}

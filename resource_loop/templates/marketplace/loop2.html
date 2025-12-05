@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Hero -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-5 text-white rounded" style="background: linear-gradient(90deg,#1b4332,#2d6a4f); position:relative; overflow:hidden;">
+                <h1 class="display-5">Turn Waste into <strong class="text-light">Opportunity</strong></h1>
+                <p class="lead">Join the circular economy. Buy and sell industrial off-cuts and materials to reduce landfill waste.</p>
+                <form action="{% url 'search' %}" method="get" class="d-flex w-100 mt-3">
+                    <input name="q" class="form-control me-2" placeholder="Search for pallets, metal scraps...">
+                    <button class="btn btn-light btn-primary-custom" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category filters -->
+    <div class="row mb-3">
+        <div class="col-12 d-flex gap-2 flex-row flex-nowrap overflow-auto pb-2">
+            <a href="{% url 'index' %}" class="btn btn-dark">All Items</a>
+            {% for cat in categories %}
+                <a href="{% url 'search' %}?category={{ cat.slug }}" class="btn btn-outline-secondary">{{ cat.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Grid of items -->
+    <div class="row g-4">
+        {% for item in recent_items %}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" style="height:220px; object-fit:cover;" alt="{{ item.title }}">
+                {% else %}
+                    <img src="https://placehold.co/600x400?text=Item" class="card-img-top" style="height:220px; object-fit:cover;" alt="{{ item.title }}">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">{{ item.category.name }}</small>
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> {{ item.location }}</small>
+                    </div>
+                    <h5 class="card-title">{{ item.title }}</h5>
+                    <p class="card-text text-muted mb-3">{{ item.description|truncatechars:120 }}</p>
+                    <div class="mt-auto d-flex justify-content-between align-items-end">
+                        <div>
+                            <div class="text-muted small">Price</div>
+                            <div class="fw-bold">KES {{ item.price }}</div>
+                        </div>
+                        <div class="text-end">
+                            <a href="{{ item.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="#" class="btn btn-sm btn-success ms-2">Add</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><p class="text-muted">No items available yet.</p></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

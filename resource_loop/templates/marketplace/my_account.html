@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}My Account{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">My Account</h2>
+            <div class="card">
+                <div class="card-body">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>First Name:</strong> {{ user.first_name }}</p>
+                    <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+                    {% if buyer_profile %}
+                    <p><strong>Phone Number:</strong> {{ buyer_profile.phone_number }}</p>
+                    <p><strong>Location:</strong> {{ buyer_profile.location }}</p>
+                    {% endif %}
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+                    <a href="{% url 'delete_account' %}" class="btn btn-danger">Delete Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

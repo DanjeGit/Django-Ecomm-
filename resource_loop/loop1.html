@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReSource Loop | The Circular Economy Marketplace</title>
+    
+    <!-- BOOTSTRAP 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FONT AWESOME -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- FONT: INTER (Modern UI Font) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* REBRANDED PALETTE: "Wealth from Waste" */
+            --brand-primary: #15c999;    /* Deep Jungle Green */
+            --brand-accent: #d97706;     /* Recycled Gold (CTA) */
+            --brand-light: #ecfdf5;      /* Mint Background */
+            --bg-gray: #f8fafc;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-gray); color: #334155; }
+        
+        /* --- UTILS --- */
+        .text-accent { color: var(--brand-accent) !important; }
+        .bg-accent { background-color: var(--brand-accent) !important; color: white; }
+        .btn-accent { 
+            background-color: var(--brand-accent); 
+            color: white; 
+            border: none; 
+            font-weight: 600; 
+            box-shadow: 0 4px 6px rgba(217, 119, 6, 0.2); 
+            transition: transform 0.2s;
+        }
+        .btn-accent:hover { background-color: #b45309; color: white; transform: translateY(-1px); }
+        .cursor-pointer { cursor: pointer; }
+        
+        /* --- HEADER --- */
+        .top-bar { background-color: var(--brand-primary); color: #a7f3d0; font-size: 12px; padding: 6px 0; }
+        .main-header { background-color: white; padding: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; }
+        
+        .search-group input { border: 2px solid #e2e8f0; border-right: none; border-radius: 8px 0 0 8px; padding: 10px; }
+        .search-group input:focus { border-color: var(--brand-primary); box-shadow: none; }
+        .search-group button { background-color: var(--brand-primary); color: white; border: none; font-weight: bold; border-radius: 0 8px 8px 0; padding: 0 25px; }
+        
+        .nav-item-custom { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: 24px; font-weight: 500; }
+        .nav-item-custom:hover { color: var(--brand-accent); }
+
+        /* --- SIDEBAR --- */
+        .sidebar { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); height: 100%; }
+        .sidebar-header { background: #f1f5f9; padding: 12px 15px; font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #475569; text-decoration: none; font-size: 14px; transition: 0.2s; border-bottom: 1px solid #f8fafc; }
+        .sidebar a:hover { color: var(--brand-primary); background-color: var(--brand-light); padding-left: 25px; font-weight: 600; }
+        .sidebar i { width: 20px; color: #94a3b8; }
+        .sidebar a:hover i { color: var(--brand-primary); }
+
+        /* --- HERO BANNER --- */
+        .hero-banner { 
+            background: linear-gradient(120deg, #064e3b 0%, #10b981 100%); 
+            color: white; 
+            border-radius: 12px; 
+            height: 100%; 
+            padding: 40px; 
+            position: relative; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(6, 78, 59, 0.2);
+        }
+        .hero-banner::after {
+            content: "\f1b9"; 
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: -30px;
+            bottom: -50px;
+            font-size: 14rem;
+            opacity: 0.1;
+            transform: rotate(-20deg);
+        }
+
+        /* --- PRODUCT CARD --- */
+        .product-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 12px; 
+            transition: all 0.3s ease; 
+            height: 100%; 
+            position: relative; 
+            border: 1px solid #f1f5f9;
+        }
+        .product-card:hover { 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08); 
+            transform: translateY(-5px); 
+            border-color: var(--brand-light);
+        }
+        .img-wrapper { 
+            height: 180px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 15px; 
+            background: #f8fafc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .img-wrapper img { max-height: 100%; max-width: 100%; object-fit: cover; transition: transform 0.5s; }
+        .product-card:hover .img-wrapper img { transform: scale(1.05); }
+        
+        .tag-eco { position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(4px); color: var(--brand-primary); padding: 4px 8px; font-size: 11px; border-radius: 6px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .product-title { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .price-current { font-size: 18px; font-weight: 800; color: var(--brand-primary); }
+        .price-unit { font-size: 12px; color: #64748b; font-weight: 400; }
+        
+        /* --- CART BADGE --- */
+        .cart-badge { position: absolute; top: -6px; right: -10px; background: var(--brand-accent); color: white; font-size: 11px; padding: 2px 6px; border-radius: 50%; font-weight: bold; border: 2px solid white; }
+
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <div class="container d-flex justify-content-between">
+            <div class="fw-bold"><i class="fa-solid fa-seedling me-2"></i> Join the Circular Economy Revolution</div>
+            <div class="d-flex gap-4 opacity-75">
+                <span class="cursor-pointer hover-white"><i class="fa-solid fa-file-contract me-1"></i> ISO Certified</span>
+                <span class="cursor-pointer hover-white"><i class="fa-solid fa-truck-fast me-1"></i> Bulk Logistics</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- LOGO -->
+                <div class="col-3 col-md-2 cursor-pointer" onclick="app.renderHome()">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-accent text-white rounded p-1"><i class="fa-solid fa-recycle fa-xl"></i></div>
+                        <div class="lh-1 d-none d-md-block">
+                            <div class="fw-bold fs-5 text-dark tracking-tight">ReSource</div>
+                            <div class="fw-bold fs-6 text-accent">LOOP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEARCH -->
+                <div class="col-7 col-md-6">
+                    <div class="input-group search-group">
+                        <span class="input-group-text bg-white text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control shadow-none" placeholder="Search materials (e.g., 'Copper', 'Motherboards', 'ABS Plastic')...">
+                        <button class="shadow-none">Search</button>
+                    </div>
+                </div>
+
+                <!-- ACCOUNT & CART -->
+                <div class="col-2 col-md-4 d-flex justify-content-end align-items-center">
+                    <div class="nav-item-custom d-none d-md-flex">
+                        <i class="fa-regular fa-user fs-5"></i>
+                        <span class="small">Account</span>
+                    </div>
+
+                    <div class="nav-item-custom" onclick="app.showCart()">
+                        <div class="position-relative">
+                            <i class="fa-solid fa-cart-shopping fs-5"></i>
+                            <span class="cart-badge" id="cart-count">0</span>
+                        </div>
+                        <span class="small d-none d-md-block">Load</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- APP ROOT -->
+    <main id="app-root" class="py-4 flex-grow-1">
+        <!-- Javascript will inject content here -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <div class="row g-5 border-bottom border-secondary pb-5">
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-accent mb-3">ReSource Loop</h5>
+                    <p class="small text-secondary lh-lg">
+                        We are Kenya's premier B2B marketplace for industrial symbiosis. 
+                        We connect waste generators with recyclers to ensure zero waste to landfill.
+                        Aligned with SDG 12 & 13.
+                    </p>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="fw-bold text-uppercase mb-3 fs-7 text-light">Materials</h6>
+                    <ul class="list-unstyled small text-secondary lh-lg">
+                        <li>Metals & Alloys</li>
+                        <li>E-Waste PCBs</li>
+                        <li>Industrial Plastics</li>
+                        <li>Spent Batteries</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold text-uppercase mb-3 fs-7 text-light">Services</h6>
+                    <ul class="list-unstyled small text-secondary lh-lg">
+                        <li>Secure Data Destruction</li>
+                        <li>Logistics & Collection</li>
+                        <li>Sustainability Audits</li>
+                        <li>Corporate Disposal</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold text-uppercase mb-3 fs-7 text-light">Accepted Payments</h6>
+                    <div class="d-flex gap-3 fs-2 text-secondary">
+                        <i class="fa-brands fa-cc-visa"></i>
+                        <i class="fa-solid fa-building-columns"></i> <!-- Bank -->
+                        <i class="fa-solid fa-mobile-screen"></i> <!-- Mobile Money -->
+                    </div>
+                </div>
+            </div>
+            <div class="text-center pt-4 small text-secondary">
+                &copy; 2025 ReSource Loop Kenya. Advancing the Circular Economy.
+            </div>
+        </div>
+    </footer>
+
+    <!-- BOOTSTRAP JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- APP LOGIC -->
+    <script>
+        // --- DATA: STRICTLY E-WASTE & RECYCLABLES ---
+        const db = {
+            cart: [],
+            categories: [
+                { id: 1, name: "Circuit Boards (PCBs)", icon: "fa-microchip" },
+                { id: 2, name: "Ferrous & Non-Ferrous", icon: "fa-cubes-stacked" },
+                { id: 3, name: "Industrial Plastics", icon: "fa-bottle-water" },
+                { id: 4, name: "Spent Batteries", icon: "fa-car-battery" },
+                { id: 5, name: "Cables & Wiring", icon: "fa-plug" },
+                { id: 6, name: "Screen/Display Scrap", icon: "fa-desktop" },
+                { id: 7, name: "Server & IT Scrap", icon: "fa-server" },
+                { id: 8, name: "Glass & Ceramics", icon: "fa-wine-glass" }
+            ],
+            items: [
+                {
+                    id: 1,
+                    title: "Class A Motherboards (Gold Bearing)",
+                    price: 4500,
+                    unit: "per kg",
+                    img: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80",
+                    rating: 4.8,
+                    reviews: 124,
+                    co2: 25,
+                    tags: ["High Value", "Precious Metals"]
+                },
+                {
+                    id: 2,
+                    title: "Bright Copper Wire (Millberry)",
+                    price: 1200,
+                    unit: "per kg",
+                    img: "https://images.unsplash.com/photo-1605557626697-2e87166d88f9?auto=format&fit=crop&w=400&q=80",
+                    rating: 5.0,
+                    reviews: 85,
+                    co2: 40,
+                    tags: ["99% Pure", "Stripped"]
+                },
+                {
+                    id: 3,
+                    title: "Shredded ABS Plastic (White)",
+                    price: 150,
+                    unit: "per kg",
+                    img: "https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=400&q=80",
+                    rating: 4.2,
+                    reviews: 15,
+                    co2: 5,
+                    tags: ["Clean", "Washed"]
+                },
+                {
+                    id: 4,
+                    title: "Mixed Laptop Scrap (Whole Units)",
+                    price: 35000,
+                    unit: "per Lot (50 units)",
+                    img: "https://images.unsplash.com/photo-1593642632823-8f78536788c6?auto=format&fit=crop&w=400&q=80",
+                    rating: 4.5,
+                    reviews: 22,
+                    co2: 150,
+                    tags: ["Refurb Potential", "Parts"]
+                },
+                {
+                    id: 5,
+                    title: "Dead Li-Ion Batteries (18650 Cells)",
+                    price: 200,
+                    unit: "per kg",
+                    img: "https://images.unsplash.com/photo-1619424263729-065792d6e355?auto=format&fit=crop&w=400&q=80",
+                    rating: 4.0,
+                    reviews: 8,
+                    co2: 12,
+                    tags: ["Cobalt Recovery", "Hazmat"]
+                },
+                {
+                    id: 6,
+                    title: "Crushed CRT Glass (Lead Containing)",
+                    price: 50,
+                    unit: "per kg",
+                    img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80",
+                    rating: 4.9,
+                    reviews: 150,
+                    co2: 8,
+                    tags: ["Recycling Only", "Bulk"]
+                }
+            ]
+        };
+
+        // --- APP CONTROLLER ---
+        const app = {
+            root: document.getElementById('app-root'),
+
+            // 1. RENDER HOME
+            renderHome: () => {
+                const categoriesHtml = db.categories.map(c => `
+                    <a href="#"><i class="fa-solid ${c.icon}"></i> ${c.name}</a>
+                `).join('');
+
+                const productsHtml = db.items.map(item => app.createCard(item)).join('');
+
+                app.root.innerHTML = `
+                    <div class="container fade-in">
+                        <div class="row g-4">
+                            <!-- SIDEBAR -->
+                            <div class="col-md-3 d-none d-lg-block">
+                                <div class="sidebar">
+                                    <div class="sidebar-header"><i class="fa-solid fa-layer-group me-2"></i> Industrial Categories</div>
+                                    ${categoriesHtml}
+                                    <div class="p-3">
+                                        <div class="bg-light rounded p-3 text-center border">
+                                            <p class="small text-muted mb-2 fw-bold">Daily Metal Prices</p>
+                                            <div class="d-flex justify-content-between small mb-1"><span>Copper:</span> <span class="text-success fw-bold">▲ 2.1%</span></div>
+                                            <div class="d-flex justify-content-between small"><span>Alum:</span> <span class="text-danger fw-bold">▼ 0.5%</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- HERO -->
+                            <div class="col-12 col-lg-9">
+                                <div class="hero-banner">
+                                    <div class="row align-items-center h-100">
+                                        <div class="col-md-8 position-relative z-1">
+                                            <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill shadow-sm">
+                                                <i class="fa-solid fa-star me-1"></i> Top Rated Recycler 2024
+                                            </span>
+                                            <h1 class="display-5 fw-bold mb-3">Turn Waste into <br>Working Capital</h1>
+                                            <p class="mb-4 opacity-90 fs-5">Securely sell your corporate e-waste and scrap metal directly to certified processors.</p>
+                                            <div class="d-flex gap-3">
+                                                <button class="btn btn-light text-success fw-bold rounded-pill px-4 shadow">Start Selling</button>
+                                                <button class="btn btn-outline-light fw-bold rounded-pill px-4">View Prices</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- URGENT REQUESTS (FLASH SALES) -->
+                        <div class="bg-white rounded-3 shadow-sm p-4 mt-5 border border-light">
+                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-danger text-white rounded p-2"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                                    <div>
+                                        <h5 class="fw-bold m-0 text-dark">High Demand Materials</h5>
+                                        <p class="small text-muted m-0">Processors actively buying these items</p>
+                                    </div>
+                                </div>
+                                <span class="fw-bold small cursor-pointer text-accent">VIEW ALL <i class="fa-solid fa-arrow-right ms-1"></i></span>
+                            </div>
+                            <div class="row g-3">
+                                ${productsHtml}
+                            </div>
+                        </div>
+                        
+                        <!-- TRUST BANNER -->
+                        <div class="row mt-5 g-4">
+                            <div class="col-md-4">
+                                <div class="bg-white p-4 rounded-3 shadow-sm text-center h-100 border-bottom border-4 border-success">
+                                    <i class="fa-solid fa-certificate fa-3x text-success mb-3 opacity-75"></i>
+                                    <h6 class="fw-bold">ISO Certified</h6>
+                                    <p class="small text-muted">All processors verified for environmental compliance.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-white p-4 rounded-3 shadow-sm text-center h-100 border-bottom border-4 border-warning">
+                                    <i class="fa-solid fa-scale-balanced fa-3x text-warning mb-3 opacity-75"></i>
+                                    <h6 class="fw-bold">Fair Pricing</h6>
+                                    <p class="small text-muted">Real-time market rates based on LME indices.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-white p-4 rounded-3 shadow-sm text-center h-100 border-bottom border-4 border-info">
+                                    <i class="fa-solid fa-truck-ramp-box fa-3x text-info mb-3 opacity-75"></i>
+                                    <h6 class="fw-bold">Integrated Logistics</h6>
+                                    <p class="small text-muted">We handle collection and transport for bulk lots.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            },
+
+            // 2. CREATE PRODUCT CARD HTML
+            createCard: (item) => {
+                return `
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                        <div class="product-card cursor-pointer" onclick="app.renderDetail(${item.id})">
+                            <span class="tag-eco"><i class="fa-solid fa-leaf me-1"></i> -${item.co2}kg CO2</span>
+                            <div class="img-wrapper">
+                                <img src="${item.img}" alt="${item.title}">
+                            </div>
+                            <div class="d-flex gap-1 mb-2">
+                                ${item.tags.map(t => `<span class="badge bg-light text-secondary border" style="font-size:9px">${t}</span>`).join('')}
+                            </div>
+                            <div class="product-title" title="${item.title}">${item.title}</div>
+                            <div>
+                                <span class="price-current">KES ${item.price.toLocaleString()}</span>
+                                <span class="price-unit">/${item.unit.replace('per ', '')}</span>
+                            </div>
+                            
+                            <button class="btn btn-accent w-100 btn-sm mt-3" onclick="event.stopPropagation(); app.addToCart(${item.id})">
+                                <i class="fa-solid fa-cart-plus me-1"></i> Add Load
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // 3. RENDER DETAILS
+            renderDetail: (id) => {
+                const item = db.items.find(i => i.id === id);
+                app.root.innerHTML = `
+                    <div class="container fade-in mt-2">
+                        <button onclick="app.renderHome()" class="btn btn-link text-decoration-none text-muted mb-3 ps-0"><i class="fa-solid fa-arrow-left me-2"></i>Back to Marketplace</button>
+                        
+                        <div class="bg-white rounded-3 shadow-sm p-4">
+                            <div class="row g-5">
+                                <!-- IMG -->
+                                <div class="col-md-5">
+                                    <div class="bg-light rounded-3 p-4 d-flex align-items-center justify-content-center h-100">
+                                        <img src="${item.img}" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                                    </div>
+                                </div>
+                                <!-- INFO -->
+                                <div class="col-md-7">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success mb-2 px-3 py-2">
+                                        <i class="fa-solid fa-check-circle me-1"></i> VERIFIED MATERIAL
+                                    </span>
+                                    <h2 class="fw-bold mb-2 text-dark">${item.title}</h2>
+                                    <div class="d-flex align-items-center gap-3 mb-4 text-muted small">
+                                        <span><i class="fa-solid fa-star text-warning me-1"></i> ${item.rating}</span>
+                                        <span>|</span>
+                                        <span>${item.reviews} Verified Trades</span>
+                                        <span>|</span>
+                                        <span class="text-success fw-bold"><i class="fa-solid fa-earth-africa me-1"></i> ${item.co2}kg CO2 Saved</span>
+                                    </div>
+                                    
+                                    <div class="p-4 bg-light rounded-3 border mb-4">
+                                        <div class="d-flex justify-content-between align-items-end mb-2">
+                                            <h1 class="fw-bold text-primary m-0">KES ${item.price.toLocaleString()}</h1>
+                                            <span class="fs-5 text-muted">${item.unit}</span>
+                                        </div>
+                                        <p class="small text-muted m-0">Market Price: <span class="text-success">Trending Up (2.4%)</span></p>
+                                    </div>
+
+                                    <h6 class="fw-bold mb-2">Material Specifications</h6>
+                                    <ul class="small text-secondary mb-4">
+                                        <li>Origin: Corporate IT Disposal</li>
+                                        <li>Condition: Sorted & Palletized</li>
+                                        <li>Contamination: < 1% Non-Recyclables</li>
+                                        <li>Availability: 500 Tons/Month</li>
+                                    </ul>
+
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-accent btn-lg" onclick="app.addToCart(${item.id})"><i class="fa-solid fa-cart-plus me-2"></i> Add Load to Manifest</button>
+                                        <button class="btn btn-outline-secondary"><i class="fa-regular fa-file-pdf me-2"></i> Download Lab Report</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                window.scrollTo(0,0);
+            },
+
+            // 4. CART LOGIC
+            addToCart: (id) => {
+                const item = db.items.find(i => i.id === id);
+                db.cart.push(item);
+                document.getElementById('cart-count').innerText = db.cart.length;
+                
+                // Button Feedback
+                const btn = event.target.closest('button');
+                const originalHtml = btn.innerHTML;
+                btn.classList.remove('btn-accent');
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Added to Manifest';
+                setTimeout(() => {
+                    btn.classList.add('btn-accent');
+                    btn.classList.remove('btn-success');
+                    btn.innerHTML = originalHtml;
+                }, 1500);
+            },
+
+            showCart: () => {
+                if(db.cart.length === 0) return alert("cart is empty.");
+                const total = db.cart.reduce((sum, i) => sum + i.price, 0);
+                alert(`Current cart:\n${db.cart.length} Loads selected.\nEst. Value: KES ${total.toLocaleString()}`);
+            }
+        };
+
+        // INIT
+        app.renderHome();
+    </script>
+</body>
+</html>

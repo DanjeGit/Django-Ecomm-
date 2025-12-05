@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4">Checkout</h2>
+
+  {% if cart_items %}
+  <div class="row">
+    <div class="col-lg-8">
+      {% for ci in cart_items %}
+      <div class="card mb-3">
+        <div class="card-body d-flex">
+          <div class="me-3">
+            {% if ci.item.image %}
+            <img src="{{ ci.item.image.url }}" style="width:100px;height:100px;object-fit:cover;" class="rounded" alt="{{ ci.item.title }}">
+            {% else %}
+            <img src="{% static 'img/placeholder.jpg' %}" style="width:100px;height:100px;object-fit:cover;" class="rounded" alt="Placeholder">
+            {% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h5 class="mb-1">{{ ci.item.title }}</h5>
+                <div class="text-muted small">Qty: {{ ci.quantity }}</div>
+              </div>
+              <div class="text-end">
+                <div class="text-muted small">Price</div>
+                <div class="fw-bold">KSh {{ ci.item.price|floatformat:2 }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Order Summary</h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Subtotal</span>
+              <span>KSh {{ total|floatformat:2 }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Shipping</span>
+              <span>KSh 0.00</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between fw-bold">
+              <span>Total</span>
+              <span>KSh {{ total|floatformat:2 }}</span>
+            </li>
+          </ul>
+          <div class="mt-3">
+            <div id="paymentStatus" class="alert d-none" role="alert"></div>
+            <form id="stkForm" method="post" action="{% url 'mpesa_stk_push' %}">
+              {% csrf_token %}
+              <div class="mb-2">
+                <label class="form-label small">Phone Number (M-Pesa)</label>
+                <input type="tel" name="phone_number" class="form-control" value="{{ request.user.buyerprofile.phone_number|default:'' }}" required>
+              </div>
+              <input type="hidden" name="amount" value="{{ total }}">
+              <button id="stkSubmit" type="submit" class="btn btn-success w-100">Place Order</button>
+            </form>
+            <small class="text-muted d-block mt-2">You will receive an M-Pesa prompt. Enter your PIN to complete payment.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Your cart is empty.</p>
+  {% endif %}
+</div>
+<script>
+  (function(){
+    const form = document.getElementById('stkForm');
+    const submitBtn = document.getElementById('stkSubmit');
+    const alertBox = document.getElementById('paymentStatus');
+    if (!form) return;
+
+    function showAlert(cls, msg){
+      alertBox.className = 'alert ' + cls;
+      alertBox.textContent = msg;
+      alertBox.classList.remove('d-none');
+    }
+
+    function pollStatus(retries){
+      fetch('{% url "payment_status" %}', {credentials: 'same-origin'})
+        .then(r=>r.json())
+        .then(data => {
+          const {pending, confirmed, cancelled} = data;
+          if (pending > 0) {
+            showAlert('alert-info', `Payment in progress… Pending items: ${pending}.`);
+          } else if (confirmed > 0) {
+            showAlert('alert-success', 'Payment confirmed! Your order has been recorded.');
+            setTimeout(()=>{ window.location.href = '{% url "purchase_history" %}'; }, 1000);
+            return;
+          } else if (cancelled > 0) {
+            showAlert('alert-danger', 'Payment was cancelled or failed. Please try again.');
+            submitBtn.disabled = false;
+            return;
+          }
+          if (retries > 0) setTimeout(()=> pollStatus(retries-1), 3000);
+          else submitBtn.disabled = false;
+        })
+        .catch(()=>{
+          if (retries > 0) setTimeout(()=> pollStatus(retries-1), 3000);
+          else submitBtn.disabled = false;
+        });
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      submitBtn.disabled = true;
+      showAlert('alert-warning', 'Initiating payment… Please approve the STK prompt on your phone.');
+      const formData = new FormData(form);
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data && !data.error) {
+          showAlert('alert-info', 'STK push sent. Waiting for confirmation…');
+          pollStatus(40); // ~2 minutes
+        } else {
+          showAlert('alert-danger', (data && data.error) || 'Failed to initiate payment.');
+          submitBtn.disabled = false;
+        }
+      })
+      .catch(() => {
+        showAlert('alert-danger', 'Network error. Please try again.');
+        submitBtn.disabled = false;
+      });
+    });
+  })();
+</script>
+{% endblock %}

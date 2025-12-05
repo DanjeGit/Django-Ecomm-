@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <h3 class="mb-4">Your Dashboard</h3>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="text-muted">Cart Items</h6>
+          <div class="display-6">{{ cart_items|length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="text-muted">Cart Value</h6>
+          <div class="display-6">KSh {{ total_cart_value|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="text-muted">Categories</h6>
+          <div class="display-6">{{ categories|length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h5 class="mt-4 mb-3">Recommended Items</h5>
+  <div class="row">
+    {% for item in recent_items %}
+    <div class="col-6 col-md-3 mb-3">
+      {% include 'marketplace/item_card.html' with item=item %}
+    </div>
+    {% empty %}
+    <p class="text-muted">No items available right now.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
