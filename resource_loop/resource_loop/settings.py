@@ -141,7 +141,7 @@ if IS_RENDER:
     
     # 2. Legacy Configuration (For Django 5 compatibility with older libs)
     # These lines prevent the "AttributeError" you are seeing
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
     # Cloudinary Config
@@ -165,7 +165,7 @@ else:
     # Legacy Fallbacks for Local
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
-    
+
 # 8. AUTHENTICATION & REDIRECTS
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
