@@ -198,11 +198,7 @@ p, .small { color: var(--text-muted); }
         .main-header { box-shadow: 0 8px 24px rgba(15,23,42,0.08); }
 
         .main-footer { background: radial-gradient(1200px 600px at 10% 0%, #0f172a 0%, #0b1222 60%, #080e1a 100%); }
-/* 
-        #container{
-           background: url("resource_loop/static/img/bg.png"); background-size: cover; background-position: center; filter: brightness(0.6); z-index: -1;padding-top:4.5rem; padding-bottom:4.5rem
-        } */
-/* --- Modern UI enhancements (additive, non-breaking) --- */
+/* Modern UI enhancements (non-breaking) */
 body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
