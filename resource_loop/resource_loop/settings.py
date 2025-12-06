@@ -130,22 +130,20 @@ MEDIA_URL = '/media/'
 
 if IS_RENDER:
     # --- PRODUCTION (Render) ---
-    # 1. Modern Configuration (Django 4.2+)
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # ✅ FIX: Using CompressedStaticFilesStorage (Non-Strict) to prevent crashes
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+            # ✅ FIX: Use standard Django storage (No compression, No crashing)
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
     
-    # 2. Legacy Configuration (For Django 5 compatibility with older libs)
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    # Legacy Fallback
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
-    # Cloudinary Config
+    # Cloudinary Config (Keep this)
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
         'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
