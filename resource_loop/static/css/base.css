@@ -234,3 +234,58 @@ body {
 /* Card image subtle hover (for item cards) */
 .card .card-img-top { transition: transform .25s ease; }
 .card:hover .card-img-top { transform: scale(1.02); }
+
+.navbar-light .navbar-toggler-icon {
+    filter: invert(0.4); /* make icon darker on light bg */
+}
+
+/* Improve account dropdown on small screens */
+@media (max-width: 767.98px) {
+  .navbar .dropdown-menu {
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    margin-left: 30px;
+  }
+
+  .navbar .dropdown-menu .dropdown-item {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+}
+
+/* Stronger visibility for account area on small screens */
+@media (max-width: 767.98px) {
+    /* Make the whole account block look like a big button */
+    .navbar .nav-item.dropdown > .nav-link {
+        background-color: #f1f5f9;
+        border-radius: 999px;
+        padding: 0.5rem 0.9rem;
+        margin-top: 0.5rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Ensure icon + text stay dark and clear */
+    .navbar .nav-item.dropdown > .nav-link i,
+    .navbar .nav-item.dropdown > .nav-link span {
+        color: #111827 !important;
+    }
+
+    /* Right-aligned dropdown using available right-side space */
+    .navbar .dropdown-menu {
+        position: relative;
+        right: 0.75rem;
+        left: auto;
+        transform: none;
+        width: auto;
+        margin-top: 0.35rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 16px 30px rgba(15,23,42,0.12);
+    }
+
+    .navbar .dropdown-menu .dropdown-item {
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 0.95rem;
+    }
+}

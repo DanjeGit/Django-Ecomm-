@@ -1,17 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-8">
-            <h2>Account</h2>
-            <p class="text-muted">Your profile and settings will appear here.</p>
+<div class="container py-4 py-md-5">
+    <div class="row g-4">
+        <!-- Profile summary -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h4 mb-2">My Account</h2>
+                    <p class="text-muted mb-3">
+                        Manage your profile, orders and marketplace activity.
+                    </p>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width:48px;height:48px;">
+                            <span class="fw-bold">
+                                {{ request.user.username|first|upper }}
+                            </span>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ request.user.username }}</div>
+                            <div class="text-muted small">
+                                {% if request.user.email %}
+                                    {{ request.user.email }}
+                                {% else %}
+                                    Email not set
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row gy-3">
+                        <div class="col-6 col-sm-4">
+                            <div class="small text-muted">Orders</div>
+                            <div class="fw-semibold">
+                                <a href="{% url 'order_list' %}" class="link-underline link-underline-opacity-0">
+                                    View orders
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="small text-muted">Account</div>
+                            <div class="fw-semibold">
+                                <a href="{% url 'my_account' %}" class="link-underline link-underline-opacity-0">
+                                    Profile details
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="small text-muted">Selling</div>
+                            <div class="fw-semibold">
+                                <a href="{% url 'add_listing' %}" class="link-underline link-underline-opacity-0">
+                                    Create listing
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <div class="card p-3">
-                <h6 class="mb-2">Quick Links</h6>
-                <a href="{% url 'add_listing' %}" class="btn btn-sm btn-primary mb-2">Create Listing</a>
-                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary mb-2">Dashboard</a>
+
+        <!-- Action panel: always visible on small screens -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-uppercase small text-muted mb-3">Account actions</h6>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fa-solid fa-box-open me-1"></i> My Orders
+                        </a>
+                        <a href="{% url 'my_account' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa-regular fa-user me-1"></i> My Profile
+                        </a>
+                        <a href="{% url 'edit_profile' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa-solid fa-pen me-1"></i> Edit Profile
+                        </a>
+                        <a href="{% url 'add_listing' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fa-solid fa-plus me-1"></i> Create Listing
+                        </a>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <form action="{% url 'logout' %}" method="post" class="d-grid">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

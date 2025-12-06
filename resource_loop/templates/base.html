@@ -58,7 +58,8 @@
                     </form>
                     <div class="d-flex align-items-center">
                         {% if user.is_authenticated %}
-                            <div class="nav-item dropdown">
+                            <!-- Hide  dropdown on small screens, show from lg and up -->
+                            <div class="nav-item dropdown d-none d-lg-block">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fa-regular fa-user fs-5 me-1"></i>
                                     <span class="d-none d-lg-inline fw-bold small">
@@ -87,6 +88,12 @@
                                     </li>
                                 </ul>
                             </div>
+
+                            <!-- Extra visible account entry for small screens only -->
+                            <a href="{% url 'account' %}" class="nav-link d-lg-none">
+                                <i class="fa-regular fa-user fs-5 me-1"></i>
+                                <span class="small fw-bold">Account & Orders</span>
+                            </a>
                         {% else %}
                             <a href="{% url 'login' %}" class="nav-link text-dark">
                                 <i class="fa-regular fa-user fs-5"></i>
