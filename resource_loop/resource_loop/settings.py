@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'cloudinary',
     'marketplace',
-   
+    # 'mpesa', # Uncomment if you have an mpesa app
 ]
 
 MIDDLEWARE = [
@@ -88,7 +88,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'resource_loop.wsgi.application'
 
 
-# DATABASE
+# 4. DATABASE
 if IS_RENDER:
     # Production: Using PostgreSQL via Render's URL
     DATABASES = {
@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # 6. INTERNATIONALIZATION
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Africa/Nairobi' # changing to 'Africa/Nairobi' for M-Pesa API accuracy
+TIME_ZONE = 'Africa/Nairobi' # Updated for M-Pesa
 USE_I18N = True
 USE_TZ = True
 
@@ -136,12 +136,12 @@ if IS_RENDER:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
+            # ✅ FIX: Using CompressedStaticFilesStorage (Non-Strict) to prevent crashes
             "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
     
     # 2. Legacy Configuration (For Django 5 compatibility with older libs)
-    # These lines prevent the "AttributeError" you are seeing
     STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
@@ -166,6 +166,7 @@ else:
     # Legacy Fallbacks for Local
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
 
 # 8. AUTHENTICATION & REDIRECTS
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
