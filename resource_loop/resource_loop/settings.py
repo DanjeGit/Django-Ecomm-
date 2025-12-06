@@ -120,17 +120,17 @@ USE_I18N = True
 USE_TZ = True
 
 
-# 7. STATIC & MEDIA FILES (Hybrid Setup)
+# 7. STATIC & MEDIA FILES (Hybrid Setup with Compatibility)
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 
-# Modern Django Storage Configuration (Fixes the conflict)
 if IS_RENDER:
+    # --- PRODUCTION (Render) ---
+    # 1. Modern Configuration (Django 4.2+)
     STORAGES = {
-        # Production: Cloudinary for Media, Whitenoise for Static
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
@@ -139,6 +139,11 @@ if IS_RENDER:
         },
     }
     
+    # 2. Legacy Configuration (For Django 5 compatibility with older libs)
+    # These lines prevent the "AttributeError" you are seeing
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
     # Cloudinary Config
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
@@ -146,7 +151,7 @@ if IS_RENDER:
         'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
     }
 else:
-    # Local: Standard file system
+    # --- LOCAL (Laptop) ---
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -156,8 +161,11 @@ else:
         },
     }
     MEDIA_ROOT = BASE_DIR / 'media'
-
-
+    
+    # Legacy Fallbacks for Local
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+    
 # 8. AUTHENTICATION & REDIRECTS
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
