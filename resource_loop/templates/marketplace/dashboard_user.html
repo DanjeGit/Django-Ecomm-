@@ -2,42 +2,67 @@
 
 {% block content %}
 <div class="container py-5">
-  <h3 class="mb-4">Your Dashboard</h3>
-  <div class="row g-3 mb-4">
+  <div class="mb-5">
+    <h3 class="fw-bold mb-1">Welcome back, {{ user.first_name|default:user.username }}!</h3>
+    <p class="text-muted">Here's what's happening with your account today.</p>
+  </div>
+
+  <div class="row g-4 mb-5">
     <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Cart Items</h6>
-          <div class="display-6">{{ cart_items|length }}</div>
+      <div class="card border-0 shadow-sm h-100 bg-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fa-solid fa-cart-shopping text-primary fs-4"></i>
+            </div>
+            <h6 class="text-muted text-uppercase small mb-0 fw-bold">Cart Items</h6>
+          </div>
+          <div class="display-6 fw-bold">{{ cart_items|length }}</div>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Cart Value</h6>
-          <div class="display-6">KSh {{ total_cart_value|floatformat:2 }}</div>
+      <div class="card border-0 shadow-sm h-100 bg-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fa-solid fa-wallet text-success fs-4"></i>
+            </div>
+            <h6 class="text-muted text-uppercase small mb-0 fw-bold">Cart Value</h6>
+          </div>
+          <div class="display-6 fw-bold">KSh {{ total_cart_value|floatformat:2 }}</div>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Categories</h6>
-          <div class="display-6">{{ categories|length }}</div>
+      <div class="card border-0 shadow-sm h-100 bg-white">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fa-solid fa-tags text-info fs-4"></i>
+            </div>
+            <h6 class="text-muted text-uppercase small mb-0 fw-bold">Categories</h6>
+          </div>
+          <div class="display-6 fw-bold">{{ categories|length }}</div>
         </div>
       </div>
     </div>
   </div>
 
-  <h5 class="mt-4 mb-3">Recommended Items</h5>
-  <div class="row">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Recommended For You</h4>
+    <a href="{% url 'index' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View All</a>
+  </div>
+  
+  <div class="row g-4">
     {% for item in recent_items %}
-    <div class="col-6 col-md-3 mb-3">
+    <div class="col-6 col-md-3">
       {% include 'marketplace/item_card.html' with item=item %}
     </div>
     {% empty %}
-    <p class="text-muted">No items available right now.</p>
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No items available right now.</p>
+    </div>
     {% endfor %}
   </div>
 </div>

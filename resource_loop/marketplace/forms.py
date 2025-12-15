@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import BuyerProfile
+from .models import BuyerProfile, SellerProfile
 import phonenumbers
 from django.core.exceptions import ValidationError
 
@@ -28,7 +28,7 @@ class UserForm(forms.ModelForm):
 
 class BuyerProfileForm(forms.ModelForm):
     phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0712345678', 'maxlength': '10'}))
-    location = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    location = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Nairobi, Westlands'}))
     
     class Meta:
         model = BuyerProfile
@@ -43,3 +43,11 @@ class BuyerProfileForm(forms.ModelForm):
         except phonenumbers.phonenumberutil.NumberParseException:
             raise ValidationError("Invalid phone number format.")
         return phone_number
+
+class SellerProfileForm(forms.ModelForm):
+    business_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Business Name'}))
+    payment_number = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'M-Pesa Number (e.g., 0712345678)'}))
+    
+    class Meta:
+        model = SellerProfile
+        fields = ('business_name', 'payment_number')

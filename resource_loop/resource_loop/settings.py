@@ -119,6 +119,9 @@ TIME_ZONE = 'Africa/Nairobi' # Updated for M-Pesa
 USE_I18N = True
 USE_TZ = True
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'index'
 
 # 7. STATIC & MEDIA FILES (Hybrid Setup with Compatibility)
 
@@ -168,10 +171,6 @@ else:
 
 # 8. AUTHENTICATION & REDIRECTS
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'index'
-LOGOUT_REDIRECT_URL = 'index'
-
 AUTHENTICATION_BACKENDS = [
     'marketplace.backends.EmailOrPhoneBackend',
     'django.contrib.auth.backends.ModelBackend',

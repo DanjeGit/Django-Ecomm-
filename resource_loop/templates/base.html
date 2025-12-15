@@ -5,38 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReSource Loop | Premier E-Waste Marketplace</title>
-    <link rel="icon" href="">
-    <link rel="icon" type="image/png" href="{% static 'img/icon.png' %}">
+    <link rel="icon" href="{% static 'img/icon.png' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        .nav-link:hover {
-            background-color: #067bf8 !important;
-            transition: color 0.2s ease-in-out;
-            border-radius: 20px;padding: 10px;
-            color: white;
-        }
-        .footer {
-            background-color: #f8f9fa;
-        }
-        .navbar{
-            background-color: #3070b4;
-        }
+        /* Removed inline styles to use base.css */
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <nav class="navbar navbar-expand-lg navbar-light sticky-top">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'index' %}">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary-green text-white rounded p-1 me-2"><i class="fa-solid fa-recycle fa-2x"></i></div>
+                        <div class="bg-primary-green text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-recycle"></i>
+                        </div>
                         <div class="lh-1">
-                            <div class="fw-bold fs-5 text-primary-green" style="color:#00e676">ReSource</div>
-                            <div class="fw-bold fs-6 text-primary-green">LOOP</div>
+                            <div class="fw-bold fs-5 text-primary-green">ReSource</div>
+                            <div class="fw-bold fs-6 text-dark">LOOP</div>
                         </div>
                     </div>
                 </a>
@@ -78,6 +68,7 @@
                                         <li><a class="dropdown-item" href="/admin/">Admin Panel</a></li>
                                     {% else %}
                                         <li><a class="dropdown-item" href="{% url 'user_dashboard' %}">Dashboard</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'seller_dashboard' %}">Seller Dashboard</a></li>
                                         <li><a class="dropdown-item" href="{% url 'my_account' %}">My Account</a></li>
                                         <li><a class="dropdown-item" href="{% url 'order_list' %}">My Orders</a></li>
                                     {% endif %}
@@ -102,10 +93,16 @@
                                 <span class="d-none d-lg-inline small fw-bold">Account</span>
                             </a>
                         {% endif %}
-                        <a href="{% url 'cart' %}" class="nav-link text-dark position-relative ms-3">
-                            <i class="fa-solid fa-cart-shopping fs-5"></i>
-                            <span class="d-none d-lg-inline small fw-bold">Cart</span>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_item_count|default:0 }}</span>
+                        <a href="{% url 'cart' %}" class="nav-link text-dark position-relative ms-3 d-flex align-items-center">
+                            <div class="position-relative">
+                                <i class="fa-solid fa-cart-shopping fs-5"></i>
+                                {% if cart_item_count and cart_item_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style="font-size: 0.65rem; padding: 0.25em 0.45em;">
+                                    {{ cart_item_count }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <span class="d-none d-lg-inline small fw-bold ms-2">Cart</span>
                         </a>
                     </div>
                 </div>

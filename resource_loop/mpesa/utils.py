@@ -40,12 +40,12 @@ def generate_password():
     # 1. Get the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     
-    # 2. HARDCODE these values for Sandbox (Do not use settings.py )
-    shortcode = "174379"
+    # 2. Use settings for Shortcode, but keep hardcoded Passkey for Sandbox if not in settings
+    shortcode = settings.SHORTCODE
     passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
     
     # 3. Generate the password
-    data_to_encode = shortcode + passkey + timestamp
+    data_to_encode = str(shortcode) + passkey + timestamp
     encoded_string = base64.b64encode(data_to_encode.encode()).decode()
     
     return encoded_string, timestamp
@@ -70,18 +70,21 @@ def stk_push(amount, phone):
 
     # Inside stk_push function...
     payload = {
-        "BusinessShortCode": 174379, # Hardcoded
+        "BusinessShortCode": int(settings.SHORTCODE), 
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
         "Amount": int(float(amount)),
         "PartyA": formatted_phone,
-        "PartyB": 174379,            # Hardcoded (Must match BusinessShortCode)
+        "PartyB": int(settings.SHORTCODE),            
         "PhoneNumber": formatted_phone,
-        "CallBackURL": settings.CALLBACK_URL, # Keep your ngrok URL here
+        "CallBackURL": settings.CALLBACK_URL, 
         "AccountReference": "DjangoTest",
         "TransactionDesc": "Payment"
     }
+    
+    print(f"STK Push: Sending to {formatted_phone} for {amount}")
+    print(f"Callback URL: {settings.CALLBACK_URL}")
 
     # try:
     #     response = requests.post(api_url, json=payload, headers=headers)

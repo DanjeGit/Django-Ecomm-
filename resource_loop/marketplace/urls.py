@@ -9,6 +9,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/user/', views.user_dashboard, name='user_dashboard'),
     path('dashboard/admin/', views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/seller/', views.seller_dashboard, name='seller_dashboard'),
     path('add-listing/', views.add_listing, name='add_listing'),
     path('cart/', views.cart_view, name='cart'),
     path('cart/add/<int:item_id>/', views.add_to_cart, name='add_to_cart'),
@@ -26,4 +27,5 @@ urlpatterns = [
     path('my-account/delete/', views.delete_account_view, name='delete_account'),
     path('mpesa/stkpush/', views.initiate_payment, name='mpesa_stk_push'),
     path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('signup/seller/', views.seller_signup_view, name='seller_signup'),
 ]

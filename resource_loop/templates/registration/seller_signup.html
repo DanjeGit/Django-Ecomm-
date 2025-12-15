@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="text-center mb-4 fw-bold text-primary-green">Become a Seller</h3>
+                    <p class="text-center text-muted mb-4">Join ReSource Loop and start turning waste into worth.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3 border-bottom pb-2">Account Details</h5>
+                        {% for field in user_form %}
+                        <div class="mb-3">
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <h5 class="mb-3 border-bottom pb-2 mt-4">Contact Info</h5>
+                        {% for field in buyer_profile_form %}
+                        <div class="mb-3">
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <h5 class="mb-3 border-bottom pb-2 mt-4">Business Details</h5>
+                        {% for field in seller_profile_form %}
+                        <div class="mb-3">
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Register as Seller</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="small text-muted">Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Log in</a></p>
+                        <p class="small text-muted">Looking to buy? <a href="{% url 'signup' %}" class="text-decoration-none">Register as Buyer</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

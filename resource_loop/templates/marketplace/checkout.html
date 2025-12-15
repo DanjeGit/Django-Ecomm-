@@ -85,27 +85,36 @@
       alertBox.classList.remove('d-none');
     }
 
-    function pollStatus(retries){
-      fetch('{% url "payment_status" %}', {credentials: 'same-origin'})
+    function pollStatus(retries, checkoutRequestId){
+      let url = '{% url "payment_status" %}';
+      if (checkoutRequestId) {
+        url += '?checkout_request_id=' + checkoutRequestId;
+      }
+
+      fetch(url, {credentials: 'same-origin'})
         .then(r=>r.json())
         .then(data => {
           const {pending, confirmed, cancelled} = data;
-          if (pending > 0) {
-            showAlert('alert-info', `Payment in progress… Pending items: ${pending}.`);
-          } else if (confirmed > 0) {
-            showAlert('alert-success', 'Payment confirmed! Your order has been recorded.');
-            setTimeout(()=>{ window.location.href = '{% url "purchase_history" %}'; }, 1000);
+          
+          if (confirmed > 0) {
+            showAlert('alert-success', 'Payment Confirmed! Your order has been placed successfully.');
+            setTimeout(()=>{ window.location.href = '{% url "purchase_history" %}'; }, 3000);
             return;
           } else if (cancelled > 0) {
             showAlert('alert-danger', 'Payment was cancelled or failed. Please try again.');
             submitBtn.disabled = false;
             return;
           }
-          if (retries > 0) setTimeout(()=> pollStatus(retries-1), 3000);
-          else submitBtn.disabled = false;
+          
+          if (retries > 0) {
+             setTimeout(()=> pollStatus(retries-1, checkoutRequestId), 5000);
+          } else {
+             showAlert('alert-warning', 'Payment verification timed out. If you paid, please check your Order History. Otherwise, please try again.');
+             submitBtn.disabled = false;
+          }
         })
         .catch(()=>{
-          if (retries > 0) setTimeout(()=> pollStatus(retries-1), 3000);
+          if (retries > 0) setTimeout(()=> pollStatus(retries-1, checkoutRequestId), 5000);
           else submitBtn.disabled = false;
         });
     }
@@ -124,7 +133,8 @@
       .then(data => {
         if (data && !data.error) {
           showAlert('alert-info', 'STK push sent. Waiting for confirmation…');
-          pollStatus(40); // ~2 minutes
+          const checkoutRequestId = data.CheckoutRequestID;
+          pollStatus(40, checkoutRequestId); // ~2 minutes
         } else {
           showAlert('alert-danger', (data && data.error) || 'Failed to initiate payment.');
           submitBtn.disabled = false;

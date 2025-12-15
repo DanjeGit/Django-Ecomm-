@@ -1,5 +1,5 @@
 from requests import request
-from .forms import UserForm, BuyerProfileForm
+from .forms import UserForm, BuyerProfileForm, SellerProfileForm, SellerProfileForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
@@ -118,9 +118,12 @@ def cart_view(request):
 
 def dashboard(request):
     # Legacy view; redirect based on role
-    if request.user.is_authenticated and request.user.is_superuser:
-        return redirect('admin_dashboard')
-    elif request.user.is_authenticated:
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('admin_dashboard')
+        # Check if user has sold items before, or just default to user dashboard
+        # For now, let's make a simple logic: if they have a seller profile, maybe send them to seller dashboard?
+        # Or better, keep user dashboard as default and add a link to seller dashboard.
         return redirect('user_dashboard')
     return redirect('index')
 
@@ -157,7 +160,7 @@ def admin_dashboard(request):
         Category.objects.annotate(item_count=Count('items'))
         .order_by('-item_count')[:5]
     )
-    recent_items = WasteItem.objects.order_by('-created_at')[:10]
+    recent_items = WasteItem.objects.order_by('-created_at')[:8]
 
     context = {
         'total_users': total_users,
@@ -172,16 +175,18 @@ def admin_dashboard(request):
 
 
 @login_required
+@login_required
 def add_listing(request):
+    # Ensure user is a seller
+    if not hasattr(request.user, 'sellerprofile'):
+        messages.info(request, "You need to register as a seller to list items.")
+        return redirect('seller_signup')
+
     categories = Category.objects.all()
     condition_choices = WasteItem.CONDITION_CHOICES
 
     if request.method == 'POST':
-        # Get or create a seller profile for the current user
-        seller_profile, created = SellerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'business_name': request.user.username} # Default business name
-        )
+        seller_profile = request.user.sellerprofile
 
         category_id = request.POST.get('category')
         category = get_object_or_404(Category, id=category_id) if category_id else None
@@ -289,9 +294,26 @@ def order_detail(request, order_id):
 
 @login_required
 def payment_status(request):
-    pending = Transaction.objects.filter(user=request.user, state='pending').count()
-    confirmed = Transaction.objects.filter(user=request.user, state='confirmed').count()
-    cancelled = Transaction.objects.filter(user=request.user, state='cancelled').count()
+    checkout_request_id = request.GET.get('checkout_request_id')
+    if checkout_request_id:
+        tx = Transaction.objects.filter(user=request.user, checkout_request_id=checkout_request_id).first()
+        if tx:
+            return JsonResponse({
+                'pending': 1 if tx.state == 'pending' else 0,
+                'confirmed': 1 if tx.state == 'confirmed' else 0,
+                'cancelled': 1 if tx.state == 'cancelled' else 0,
+            })
+        # If not found, assume pending (it might be being created)
+        return JsonResponse({'pending': 1, 'confirmed': 0, 'cancelled': 0})
+
+    # Fallback: Check only recent transactions (last 15 mins) to avoid false positives from old history
+    from django.utils import timezone
+    from datetime import timedelta
+    recent_time = timezone.now() - timedelta(minutes=15)
+    
+    pending = Transaction.objects.filter(user=request.user, state='pending', created_at__gte=recent_time).count()
+    confirmed = Transaction.objects.filter(user=request.user, state='confirmed', created_at__gte=recent_time).count()
+    cancelled = Transaction.objects.filter(user=request.user, state='cancelled', created_at__gte=recent_time).count()
     return JsonResponse({
         'pending': pending,
         'confirmed': confirmed,
@@ -356,6 +378,9 @@ def login_view(request):
             messages.success(request, f"Welcome back, {user.username}!")
             if user.is_superuser:
                 return redirect('admin_dashboard')
+            # If user has a seller profile, prefer seller dashboard
+            if hasattr(user, 'sellerprofile'):
+                return redirect('seller_dashboard')
             return redirect('user_dashboard')
         else:
             messages.error(request, "Invalid username or password. Please try again.")
@@ -548,10 +573,23 @@ def mpesa_callback(request):
                         tx.mpesa_name = mpesa_name or (user.get_full_name() if user else '')
                         tx.phone_number = phone or tx.phone_number
                         tx.save()
-                        # Update order status to placed
+                        # Update order status to confirmed
                         if tx.order:
-                            tx.order.status = 'placed'
+                            tx.order.status = 'confirmed'
                             tx.order.save()
+                            
+                            # Reduce stock quantity
+                            for order_item in tx.order.items.all():
+                                if order_item.item:
+                                    try:
+                                        current_stock = int(order_item.item.stock_quantity)
+                                        new_stock = max(0, current_stock - order_item.quantity)
+                                        order_item.item.stock_quantity = str(new_stock)
+                                        order_item.item.save()
+                                    except ValueError:
+                                        # Handle cases where stock is not a number (e.g. "5 tons")
+                                        pass
+
                         # Clear cart after confirmation
                         try:
                             if user:
@@ -574,3 +612,77 @@ def mpesa_callback(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
             
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@login_required
+def seller_dashboard(request):
+    # Ensure user has a seller profile
+    seller_profile, created = SellerProfile.objects.get_or_create(user=request.user, defaults={'business_name': request.user.username})
+    
+    # Get all items listed by this seller
+    my_listings = WasteItem.objects.filter(seller=seller_profile).order_by('-created_at')
+    
+    # Calculate stats
+    active_listings_count = my_listings.filter(stock_quantity__gt=0).count()
+    
+    # Find order items that correspond to this seller's products
+    # We look for OrderItems where the item's seller is the current user's profile
+    # and the order status is 'confirmed', 'placed', 'processing', 'shipped', or 'delivered'
+    sold_items = OrderItem.objects.filter(
+        item__seller=seller_profile,
+        order__status__in=['confirmed', 'placed', 'processing', 'shipped', 'delivered']
+    ).select_related('order', 'item').order_by('-order__created_at')
+    
+    items_sold_count = sum(item.quantity for item in sold_items)
+    total_sales = sum(item.price * item.quantity for item in sold_items)
+    
+    context = {
+        'seller_profile': seller_profile,
+        'my_listings': my_listings,
+        'active_listings_count': active_listings_count,
+        'items_sold_count': items_sold_count,
+        'total_sales': total_sales,
+        'recent_sales': sold_items[:10], # Show last 10 sales
+    }
+    return render(request, 'marketplace/dashboard_seller.html', context)
+
+def seller_signup_view(request):
+    if request.method == 'POST':
+        user_form = UserForm(request.POST)
+        buyer_profile_form = BuyerProfileForm(request.POST) # We still need this for phone/location
+        seller_profile_form = SellerProfileForm(request.POST)
+        
+        if user_form.is_valid() and buyer_profile_form.is_valid() and seller_profile_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password(user_form.cleaned_data['password'])
+            user.save()
+            
+            # Create Buyer Profile (for contact info)
+            buyer_profile = buyer_profile_form.save(commit=False)
+            buyer_profile.user = user
+            buyer_profile.save()
+            
+            # Create Seller Profile
+            seller_profile = seller_profile_form.save(commit=False)
+            seller_profile.user = user
+            seller_profile.save()
+            
+            user = authenticate(request, username=user_form.cleaned_data['username'], password=user_form.cleaned_data['password'])
+            
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Welcome, {user.username}! Your seller account has been created.")
+                return redirect('seller_dashboard')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        user_form = UserForm()
+        buyer_profile_form = BuyerProfileForm()
+        seller_profile_form = SellerProfileForm()
+        
+    context = {
+        'user_form': user_form,
+        'buyer_profile_form': buyer_profile_form,
+        'seller_profile_form': seller_profile_form,
+        'is_seller_signup': True
+    }
+    return render(request, 'registration/seller_signup.html', context)

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Seller Dashboard</h2>
+            <p class="text-muted mb-0">Manage your listings and track your sales performance.</p>
+        </div>
+        <a href="{% url 'add_listing' %}" class="btn btn-primary shadow-sm">
+            <i class="fa-solid fa-plus me-2"></i>Add New Listing
+        </a>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="fa-solid fa-coins text-success fs-4"></i>
+                        </div>
+                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Total Sales</h6>
+                    </div>
+                    <h3 class="mb-0 fw-bold">KSh {{ total_sales|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="fa-solid fa-box-open text-primary fs-4"></i>
+                        </div>
+                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Active Listings</h6>
+                    </div>
+                    <h3 class="mb-0 fw-bold">{{ active_listings_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="fa-solid fa-truck-fast text-warning fs-4"></i>
+                        </div>
+                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Items Sold</h6>
+                    </div>
+                    <h3 class="mb-0 fw-bold">{{ items_sold_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Recent Sales</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Order ID</th>
+                            <th>Item</th>
+                            <th>Buyer</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td class="ps-4">#{{ sale.order.order_uuid|stringformat:"s"|slice:":8" }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if sale.item.image %}
+                                    <img src="{{ sale.item.image.url }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fa-solid fa-image text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span>{{ sale.item.title }}</span>
+                                </div>
+                            </td>
+                            <td>{{ sale.order.user.username }}</td>
+                            <td>{{ sale.order.created_at|date:"M d, Y" }}</td>
+                            <td class="fw-bold">KSh {{ sale.price|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-success bg-opacity-10 text-success">Sold</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No sales yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Listings -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">My Listings</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Item</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Views</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in my_listings %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    {% if item.image %}
+                                    <img src="{{ item.image.url }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fa-solid fa-image text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none text-dark fw-medium">{{ item.title }}</a>
+                                </div>
+                            </td>
+                            <td>KSh {{ item.price|floatformat:2 }}</td>
+                            <td>{{ item.stock_quantity }}</td>
+                            <td>{{ item.reviews_count }}</td> <!-- Using reviews_count as placeholder for views if needed, or add views field later -->
+                            <td>
+                                {% if item.stock_quantity|add:"0" > 0 %}
+                                <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">Out of Stock</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'item_detail' item.slug %}" class="btn btn-sm btn-outline-secondary">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                You haven't listed any items yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

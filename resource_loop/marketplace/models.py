@@ -66,7 +66,7 @@ class WasteItem(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(f"{self.title}-{self.seller.username}")
+            self.slug = slugify(f"{self.title}-{self.seller.user.username}")
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -111,6 +111,7 @@ class SellerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='sellerprofile')
     business_name = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False)
+    payment_number = models.CharField(max_length=20, blank=True, help_text="M-Pesa number for receiving payments")
 
     def __str__(self):
         return self.business_name
@@ -149,6 +150,7 @@ class Transaction(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('payment_pending', 'Payment Pending'),
+        ('confirmed', 'Confirmed'),
         ('placed', 'Placed'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
