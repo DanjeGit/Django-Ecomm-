@@ -27,4 +27,32 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // County/Subcounty Dynamic Dropdown
+    const locationsData = {{ kenya_locations_json|safe }};
+    const countySelect = document.getElementById('id_county');
+    const subCountySelect = document.getElementById('id_sub_county');
+
+    if (countySelect && subCountySelect) {
+        countySelect.addEventListener('change', function() {
+            const selectedCounty = this.value;
+            
+            // Clear existing options
+            subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+            
+            if (selectedCounty && locationsData[selectedCounty]) {
+                const subCounties = locationsData[selectedCounty];
+                subCounties.forEach(function(sc) {
+                    const option = document.createElement('option');
+                    option.value = sc;
+                    option.textContent = sc;
+                    subCountySelect.appendChild(option);
+                });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

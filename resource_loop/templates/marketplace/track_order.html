@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-search-location me-2"></i>Track Your Order</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="GET" action="{% url 'track_order' %}" class="mb-4">
+                        <div class="input-group input-group-lg">
+                            <input type="text" name="q" class="form-control" placeholder="Enter Order UUID, ID, or M-Pesa Receipt No." value="{{ query }}" required>
+                            <button class="btn btn-dark" type="submit">Track</button>
+                        </div>
+                        <small class="text-muted">e.g. QKH1234567 or 550e8400-e29b...</small>
+                    </form>
+
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+                        </div>
+                    {% endif %}
+
+                    {% if order %}
+                        <div class="order-details mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Order #{{ order.id }}</h5>
+                                <span class="badge bg-secondary">{{ order.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            
+                            <!-- Progress Tracker -->
+                            <div class="position-relative m-4">
+                                <div class="progress" style="height: 2px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 
+                                        {% if order.status == 'placed' %}20%
+                                        {% elif order.status == 'confirmed' %}40%
+                                        {% elif order.status == 'processing' %}60%
+                                        {% elif order.status == 'shipped' %}80%
+                                        {% elif order.status == 'delivered' %}100%
+                                        {% else %}0%{% endif %};" 
+                                    aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between position-absolute top-0 w-100" style="margin-top: -10px;">
+                                    <div class="text-center {% if order.status == 'placed' or order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}text-success{% else %}text-muted{% endif %}">
+                                        <i class="fas fa-check-circle bg-white"></i>
+                                        <p class="small mt-1">Placed</p>
+                                    </div>
+                                    <div class="text-center {% if order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}text-success{% else %}text-muted{% endif %}">
+                                        <i class="fas fa-check-circle bg-white"></i>
+                                        <p class="small mt-1">Confirmed</p>
+                                    </div>
+                                    <div class="text-center {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}text-success{% else %}text-muted{% endif %}">
+                                        <i class="fas fa-check-circle bg-white"></i>
+                                        <p class="small mt-1">Processing</p>
+                                    </div>
+                                    <div class="text-center {% if order.status == 'shipped' or order.status == 'delivered' %}text-success{% else %}text-muted{% endif %}">
+                                        <i class="fas fa-truck bg-white"></i>
+                                        <p class="small mt-1">Shipped</p>
+                                    </div>
+                                    <div class="text-center {% if order.status == 'delivered' %}text-success{% else %}text-muted{% endif %}">
+                                        <i class="fas fa-box-open bg-white"></i>
+                                        <p class="small mt-1">Delivered</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-5 pt-3">
+                                <h6>Items in this Order:</h6>
+                                <ul class="list-group mb-3">
+                                    {% for item in order.items.all %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            {% if item.item.image %}
+                                                <img src="{{ item.item.image.url }}" alt="{{ item.item.title }}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="my-0">{{ item.item.title }}</h6>
+                                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                            </div>
+                                        </div>
+                                        <span class="text-muted">KES {{ item.price }}</span>
+                                    </li>
+                                    {% endfor %}
+                                    <li class="list-group-item d-flex justify-content-between bg-light">
+                                        <span>Total (KES)</span>
+                                        <strong>{{ order.total_amount }}</strong>
+                                    </li>
+                                </ul>
+                                
+                                {% if order.status == 'delivered' %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-double me-2"></i>This order has been delivered. Thank you!
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -9,6 +9,11 @@
         <span>
           Order #{{ order.id }} — {{ order.get_status_display }}
           <small class="text-muted d-block">Placed {{ order.created_at|date:"M d, Y H:i" }}</small>
+          {% for tx in order.transactions.all %}
+             {% if tx.mpesa_receipt_number %}
+                <small class="text-success d-block"><i class="fas fa-receipt me-1"></i>Ref: {{ tx.mpesa_receipt_number }}</small>
+             {% endif %}
+          {% endfor %}
         </span>
         <span class="badge bg-primary rounded-pill">KES {{ order.total_amount }}</span>
       </a>

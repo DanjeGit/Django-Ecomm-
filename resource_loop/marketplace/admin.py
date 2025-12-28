@@ -25,9 +25,9 @@ class BuyerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'state', 'merchant_request_id', 'checkout_request_id', 'created_at')
+    list_display = ('user', 'amount', 'state', 'mpesa_receipt_number', 'mpesa_name', 'created_at')
     list_filter = ('state', 'created_at')
-    search_fields = ('user__username', 'mpesa_name', 'phone_number', 'item__title', 'merchant_request_id', 'checkout_request_id')
+    search_fields = ('user__username', 'mpesa_name', 'phone_number', 'mpesa_receipt_number', 'checkout_request_id')
     ordering = ('-created_at',)
     actions = ('mark_confirmed', 'mark_cancelled')
 

@@ -2,70 +2,130 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container pt-4">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="bg-white p-4 rounded shadow-sm">
-                <h2 class="fw-bold mb-3">List Waste Item</h2>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Location</label>
-                            <input name="location" class="form-control" required>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-4 border-0 text-center">
+                    <h2 class="fw-bold mb-1">List Waste Item</h2>
+                    <p class="text-muted mb-0">Fill in the details to list your item for sale.</p>
+                </div>
+                <div class="card-body p-5 pt-0">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase text-muted">County</label>
+                                <select name="county" id="id_county" class="form-select form-select-lg bg-light border-0" required>
+                                    <option value="">Select County</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Sub-County</label>
+                                <select name="sub_county" id="id_sub_county" class="form-select form-select-lg bg-light border-0" required>
+                                    <option value="">Select County First</option>
+                                </select>
+                            </div>
                         </div>
                         
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Condition</label>
-                            <select name="condition" class="form-select">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Condition</label>
+                            <select name="condition" class="form-select form-select-lg bg-light border-0">
                                 {% for value, display in condition_choices %}
                                     <option value="{{ value }}">{{ display }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input name="title" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select name="category" class="form-select">
-                            <option value="">-- Select --</option>
-                            {% for cat in categories %}
-                                <option value="{{ cat.id }}">{{ cat.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Price (KES)</label>
-                            <input name="price" type="number" step="0.01" class="form-control">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Title</label>
+                            <input name="title" class="form-control form-control-lg bg-light border-0" placeholder="e.g. Recycled Plastic Bottles" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Quantity</label>
-                            <input name="quantity" type="number" class="form-control" value="1">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Category</label>
+                            <select name="category" class="form-select form-select-lg bg-light border-0">
+                                <option value="">-- Select Category --</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="e.g. Slightly used HP Laptop, battery life 4 hours. Minor scratches on the lid but screen is perfect."></textarea>
-                        <div class="form-text">Describe the item's condition, history, and any defects.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Specifications</label>
-                        <textarea name="specifications" class="form-control" rows="2" placeholder="e.g. 8GB RAM, 256GB SSD, Intel i5 8th Gen"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Upload Image</label>
-                        <input name="image" type="file" class="form-control">
-                    </div>
-                    <button class="btn btn-primary">Create Listing</button>
-                </form>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Price (KES)</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text border-0 bg-light text-muted">KSh</span>
+                                    <input name="price" type="number" step="0.01" class="form-control bg-light border-0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Quantity</label>
+                                <input name="quantity" type="number" class="form-control form-control-lg bg-light border-0" value="1">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Description</label>
+                            <textarea name="description" class="form-control bg-light border-0" rows="4" placeholder="Describe the item's condition, history, and any defects..."></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Specifications</label>
+                            <textarea name="specifications" class="form-control bg-light border-0" rows="3" placeholder="e.g. Weight, Dimensions, Material type..."></textarea>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Upload Image</label>
+                            <input name="image" type="file" class="form-control form-control-lg bg-light border-0" accept="image/*">
+                            <div class="form-text">Select an image file or use your camera to take a photo.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg rounded-pill shadow-sm">Create Listing</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationsData = {{ kenya_locations_json|safe }};
+    const countySelect = document.getElementById('id_county');
+    const subCountySelect = document.getElementById('id_sub_county');
+
+    // Populate County Dropdown
+    if (countySelect) {
+        Object.keys(locationsData).sort().forEach(function(county) {
+            const option = document.createElement('option');
+            option.value = county;
+            option.textContent = county;
+            countySelect.appendChild(option);
+        });
+
+        // Handle Change
+        countySelect.addEventListener('change', function() {
+            const selectedCounty = this.value;
+            
+            // Clear existing options
+            subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+            
+            if (selectedCounty && locationsData[selectedCounty]) {
+                const subCounties = locationsData[selectedCounty];
+                subCounties.forEach(function(sc) {
+                    const option = document.createElement('option');
+                    option.value = sc;
+                    option.textContent = sc;
+                    subCountySelect.appendChild(option);
+                });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

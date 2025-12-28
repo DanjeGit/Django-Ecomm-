@@ -15,7 +15,13 @@
                     <p><strong>Last Name:</strong> {{ user.last_name }}</p>
                     {% if buyer_profile %}
                     <p><strong>Phone Number:</strong> {{ buyer_profile.phone_number }}</p>
-                    <p><strong>Location:</strong> {{ buyer_profile.location }}</p>
+                    <p><strong>Location:</strong> 
+                        {% if buyer_profile.county or buyer_profile.sub_county %}
+                            {{ buyer_profile.sub_county }}, {{ buyer_profile.county }}
+                        {% else %}
+                            {{ buyer_profile.location }}
+                        {% endif %}
+                    </p>
                     {% endif %}
                     <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
                     <a href="{% url 'delete_account' %}" class="btn btn-danger">Delete Account</a>

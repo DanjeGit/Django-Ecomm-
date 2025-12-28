@@ -8,9 +8,9 @@
       <thead>
         <tr>
           <th scope="col">Date</th>
-          <th scope="col">Item</th>
+          <th scope="col">Items Purchased</th>
           <th scope="col">Amount (KSh)</th>
-          <th scope="col">MPESA Name</th>
+          <th scope="col">Paid By (M-Pesa Name)</th>
           <th scope="col">Phone</th>
           <th scope="col">State</th>
         </tr>
@@ -20,14 +20,31 @@
         <tr>
           <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
           <td>
-            {% if tx.item %}
+            {% if tx.order %}
+              <ul class="list-unstyled mb-0">
+                {% for order_item in tx.order.items.all %}
+                  <li>
+                    <a class="text-decoration-none" href="{% url 'item_detail' order_item.item.slug %}">
+                      {{ order_item.item.title }}
+                    </a>
+                    <span class="text-muted small">x{{ order_item.quantity }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% elif tx.item %}
               <a class="text-decoration-none" href="{% url 'item_detail' tx.item.slug %}">{{ tx.item.title }}</a>
             {% else %}
               <span class="text-muted">(Item unavailable)</span>
             {% endif %}
           </td>
           <td>{{ tx.amount|floatformat:2 }}</td>
-          <td>{{ tx.mpesa_name }}</td>
+          <td>
+            {% if tx.mpesa_name %}
+              {{ tx.mpesa_name }}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
           <td>{{ tx.phone_number }}</td>
           <td>
             {% if tx.state == 'confirmed' %}

@@ -4,8 +4,21 @@
   <h2 class="mb-3">Order #{{ order.id }}</h2>
   <p>Status: <span class="badge bg-info">{{ order.get_status_display }}</span></p>
   <p>Placed: {{ order.created_at|date:"M d, Y H:i" }}</p>
+  
+  {% for tx in order.transactions.all %}
+    {% if tx.mpesa_receipt_number %}
+      <div class="alert alert-success py-2">
+        <i class="fas fa-check-circle me-2"></i>Paid via M-Pesa
+        <br>
+        <small><strong>Ref:</strong> {{ tx.mpesa_receipt_number }}</small>
+        <br>
+        <small><strong>Payer:</strong> {{ tx.mpesa_name }}</small>
+      </div>
+    {% endif %}
+  {% endfor %}
+
   <p>
-    Order ID:
+    Order UUID:
     <code id="order-uuid">{{ order.order_uuid }}</code>
     <button class="btn btn-sm btn-outline-secondary ms-2" type="button" onclick="navigator.clipboard.writeText(document.getElementById('order-uuid').innerText)">Copy</button>
   </p>

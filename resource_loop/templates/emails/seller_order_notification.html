@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Order Received</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .header h1 { color: #2c3e50; margin: 0; }
+        .alert-box { background-color: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 20px 0; text-align: center; font-weight: bold; }
+        .order-details { margin-top: 20px; }
+        .item-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
+        .item-image { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px; background-color: #f9f9f9; }
+        .item-info { flex-grow: 1; }
+        .item-title { font-weight: bold; color: #34495e; display: block; }
+        .item-meta { font-size: 13px; color: #7f8c8d; }
+        .total-section { text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; color: #2c3e50; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #95a5a6; }
+        .btn { display: inline-block; background-color: #27ae60; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Resource Loop</h1>
+            <p>New Order Alert!</p>
+        </div>
+
+        <div class="alert-box">
+            🎉 You have made a sale!
+        </div>
+
+        <div class="content">
+            <p>Hello <strong>{{ seller.business_name }}</strong>,</p>
+            <p>Great news! A buyer has just purchased items from your store. The payment has been confirmed.</p>
+            
+            <div class="order-details">
+                <h3>Order #{{ order.id }}</h3>
+                {% for item in items %}
+                <div class="item-row">
+                    {% if item.item.image %}
+                    <img src="{{ domain }}{{ item.item.image.url }}" alt="{{ item.item.title }}" class="item-image">
+                    {% else %}
+                    <div class="item-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;">No Img</div>
+                    {% endif %}
+                    <div class="item-info">
+                        <span class="item-title">{{ item.item.title }}</span>
+                        <span class="item-meta">Qty: {{ item.quantity }} | Price: KES {{ item.price }}</span>
+                    </div>
+                    <div class="item-total">
+                        KES {{ item.price }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="total-section">
+                Total Value: KES {{ total_value }}
+            </div>
+
+            <p>Please prepare these items for shipment/pickup as soon as possible.</p>
+
+            <div style="text-align: center;">
+                <a href="{{ domain }}/dashboard/seller/" class="btn">Go to Seller Dashboard</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; {{ year }} Resource Loop. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

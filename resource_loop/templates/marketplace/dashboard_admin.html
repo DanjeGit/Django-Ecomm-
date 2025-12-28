@@ -2,76 +2,81 @@
 
 {% block content %}
 <div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0">Admin Dashboard</h3>
-    <span class="badge bg-dark">Today: {{ now|default:"" }}</span>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+        <p class="text-muted mb-0">Overview of platform performance and statistics.</p>
+    </div>
+    <span class="badge bg-dark rounded-pill px-3 py-2">Today: {{ now|default:"" }}</span>
   </div>
 
   <!-- KPI Cards -->
-  <div class="row g-3 mb-4">
+  <div class="row g-4 mb-5">
     <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <h6 class="text-muted mb-0">Users</h6>
-            <i class="fa-regular fa-user fs-5 text-secondary"></i>
+      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+        <div class="card-body p-4 position-relative">
+          <div class="position-absolute top-0 end-0 p-3 opacity-10">
+            <i class="fa-regular fa-user fa-4x text-primary"></i>
           </div>
-          <div class="display-6 fw-bold mt-2">{{ total_users }}</div>
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Users</h6>
+          <h2 class="display-5 fw-bold mb-0">{{ total_users }}</h2>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <h6 class="text-muted mb-0">Items</h6>
-            <i class="fa-solid fa-box fs-5 text-secondary"></i>
+      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+        <div class="card-body p-4 position-relative">
+          <div class="position-absolute top-0 end-0 p-3 opacity-10">
+            <i class="fa-solid fa-box fa-4x text-success"></i>
           </div>
-          <div class="display-6 fw-bold mt-2">{{ total_items }}</div>
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Items</h6>
+          <h2 class="display-5 fw-bold mb-0">{{ total_items }}</h2>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <h6 class="text-muted mb-0">Categories</h6>
-            <i class="fa-solid fa-layer-group fs-5 text-secondary"></i>
+      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+        <div class="card-body p-4 position-relative">
+          <div class="position-absolute top-0 end-0 p-3 opacity-10">
+            <i class="fa-solid fa-layer-group fa-4x text-warning"></i>
           </div>
-          <div class="display-6 fw-bold mt-2">{{ total_categories }}</div>
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Categories</h6>
+          <h2 class="display-5 fw-bold mb-0">{{ total_categories }}</h2>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between">
-            <h6 class="text-muted mb-0">Sellers / Buyers</h6>
-            <i class="fa-solid fa-people-group fs-5 text-secondary"></i>
+      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+        <div class="card-body p-4 position-relative">
+          <div class="position-absolute top-0 end-0 p-3 opacity-10">
+            <i class="fa-solid fa-people-group fa-4x text-info"></i>
           </div>
-          <div class="display-6 fw-bold mt-2">{{ sellers }} / {{ buyers }}</div>
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Sellers / Buyers</h6>
+          <h2 class="display-5 fw-bold mb-0">{{ sellers }} <span class="fs-4 text-muted">/</span> {{ buyers }}</h2>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4">
     <!-- Top Categories + Analytics Placeholder -->
     <div class="col-lg-6">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-body">
-          <h6 class="mb-3">Top Categories</h6>
-          <ul class="list-group list-group-flush mb-3">
+      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Top Categories</h5>
+        </div>
+        <div class="card-body pt-0">
+          <ul class="list-group list-group-flush mb-4">
             {% for cat in top_categories %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><i class="fa-solid fa-tag text-secondary me-2"></i>{{ cat.name }}</span>
-                <span class="badge bg-primary rounded-pill">{{ cat.item_count }}</span>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0 py-2">
+                <span class="fw-medium"><i class="fa-solid fa-tag text-primary opacity-50 me-2"></i>{{ cat.name }}</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ cat.item_count }} items</span>
               </li>
             {% empty %}
-              <li class="list-group-item text-muted">No categories yet.</li>
+              <li class="list-group-item text-muted px-0">No categories yet.</li>
             {% endfor %}
           </ul>
-          <div class="border rounded p-3" style="height: 280px;">
+          <div class="border rounded-4 p-3 bg-light" style="height: 280px;">
             <canvas id="topCategoriesChart"
               data-labels='[{% for cat in top_categories %}"{{ cat.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}]'
               data-values='[{% for cat in top_categories %}{{ cat.item_count }}{% if not forloop.last %}, {% endif %}{% endfor %}]'
@@ -83,34 +88,38 @@
 
     <!-- Recent Items Image Gallery -->
     <div class="col-lg-6">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Recent Items</h6>
-            <span class="text-muted small">Showing latest {{ recent_items|length }}</span>
-          </div>
+      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Recent Items</h5>
+            <span class="badge bg-light text-dark rounded-pill">Latest {{ recent_items|length }}</span>
+        </div>
+        <div class="card-body pt-0">
           <div class="row g-3">
             {% for item in recent_items %}
               <div class="col-6 col-md-4">
-                <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none">
-                  <div class="position-relative" style="height: 120px; overflow: hidden; border-radius: 10px;">
+                <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none card-hover-effect d-block">
+                  <div class="position-relative rounded-4 overflow-hidden shadow-sm" style="height: 120px;">
                     {% if item.image %}
-                      <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width:100%; height:100%; object-fit: cover;">
+                      <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-100 h-100 object-fit-cover transition-transform">
                     {% else %}
-                      <div class="bg-light d-flex align-items-center justify-content-center" style="width:100%; height:100%;">
-                        <span class="text-muted small">No image</span>
+                      <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center flex-column">
+                        <i class="fa-solid fa-image text-muted mb-1"></i>
+                        <span class="text-muted small" style="font-size: 0.7rem;">No image</span>
                       </div>
                     {% endif %}
-                    <span class="badge bg-white text-dark position-absolute" style="top:6px; left:6px;">{{ item.category.name|default:"" }}</span>
+                    <span class="badge bg-white bg-opacity-90 text-dark position-absolute shadow-sm" style="top:8px; left:8px; font-size: 0.7rem;">{{ item.category.name|default:"Uncategorized" }}</span>
                   </div>
                   <div class="mt-2">
-                    <div class="small text-dark fw-semibold">{{ item.title|truncatechars:34 }}</div>
-                    <div class="text-muted small">KSh {{ item.price|floatformat:2 }}</div>
+                    <div class="small text-dark fw-bold text-truncate">{{ item.title }}</div>
+                    <div class="text-primary small fw-bold">KSh {{ item.price|floatformat:0 }}</div>
                   </div>
                 </a>
               </div>
             {% empty %}
-              <div class="col-12"><p class="text-muted">No recent items.</p></div>
+              <div class="col-12 text-center py-5">
+                  <i class="fas fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
+                  <p class="text-muted">No recent items found.</p>
+              </div>
             {% endfor %}
           </div>
         </div>
@@ -125,6 +134,11 @@
     if (!ctx) return;
     const labels = JSON.parse(ctx.getAttribute('data-labels') || '[]');
     const data = JSON.parse(ctx.getAttribute('data-values') || '[]');
+    
+    // Custom Chart.js defaults for better look
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6c757d';
+    
     new Chart(ctx, {
       type: 'bar',
       data: {
@@ -132,15 +146,55 @@
         datasets: [{
           label: 'Items per Category',
           data: data,
-          backgroundColor: '#067bf8',
-          borderRadius: 6,
+          backgroundColor: 'rgba(13, 110, 253, 0.8)',
+          hoverBackgroundColor: '#0d6efd',
+          borderRadius: 8,
+          borderSkipped: false,
+          barThickness: 20,
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#fff',
+                titleColor: '#000',
+                bodyColor: '#666',
+                borderColor: '#e9ecef',
+                borderWidth: 1,
+                padding: 10,
+                displayColors: false,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' Items';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: '#f8f9fa',
+                    drawBorder: false,
+                },
+                ticks: {
+                    precision: 0,
+                    padding: 10
+                }
+            },
+            x: {
+                grid: {
+                    display: false,
+                    drawBorder: false,
+                },
+                ticks: {
+                    padding: 10
+                }
+            }
+        }
       }
     });
   })();

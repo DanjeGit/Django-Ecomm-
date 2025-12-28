@@ -21,3 +21,7 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
 whitenoise==6.11.0
+celery==5.3.6
+redis==5.0.1
+djangorestframework==3.14.0
+django-anymail[brevo]==10.3

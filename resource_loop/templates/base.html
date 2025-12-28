@@ -17,24 +17,24 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-glass sticky-top py-3">
             <div class="container">
-                <a class="navbar-brand" href="{% url 'index' %}">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary-green text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <i class="fa-solid fa-recycle"></i>
-                        </div>
-                        <div class="lh-1">
-                            <div class="fw-bold fs-5 text-primary-green">ReSource</div>
-                            <div class="fw-bold fs-6 text-dark">LOOP</div>
-                        </div>
+                <a class="navbar-brand d-flex align-items-center" href="{% url 'index' %}">
+                    <div class="bg-primary-green text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 42px; height: 42px; transition: transform 0.3s;">
+                        <i class="fa-solid fa-recycle"></i>
+                    </div>
+                    <div class="lh-1">
+                        <div class="fw-bold fs-5 text-primary-green" style="letter-spacing: -0.5px;">ReSource</div>
+                        <div class="fw-bold fs-6 text-dark" style="letter-spacing: 1px;">LOOP</div>
                     </div>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">Marketplace</a>
                         </li>
@@ -42,68 +42,64 @@
                             <a class="nav-link {% if '/dashboard' in request.path %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if '/add-listing' in request.path %}active{% endif %}" href="{% url 'add_listing' %}">+ Sell Waste</a>
+                            <a class="nav-link {% if '/track' in request.path %}active{% endif %}" href="{% url 'track_order' %}">Track Order</a>
                         </li>
                     </ul>
-                    <form class="d-flex mx-lg-2 mb-3 mb-lg-0" action="{% url 'search' %}" method="get">
-                        <input type="search" name="q" class="form-control" placeholder="Search..." aria-label="Search" value="{{ request.GET.q }}">
-                    </form>
-                    <div class="d-flex align-items-center">
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <form class="d-none d-lg-flex" action="{% url 'search' %}" method="get">
+                            <div class="input-group">
+                                <input type="search" name="q" class="form-control search-input" placeholder="Search items..." aria-label="Search" value="{{ request.GET.q }}">
+                                <button class="btn search-btn" type="submit"><i class="fas fa-search"></i></button>
+                            </div>
+                        </form>
+
+                        <a href="{% url 'add_listing' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-none d-lg-block shadow-sm">
+                            <i class="fas fa-plus me-1"></i> Sell Waste
+                        </a>
+
+                        <a href="{% url 'cart' %}" class="position-relative text-dark me-2">
+                            <i class="fa-solid fa-cart-shopping fs-5"></i>
+                            {% if cart_item_count and cart_item_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white shadow-sm" style="font-size: 0.6rem; padding: 0.25em 0.5em;">
+                                {{ cart_item_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+
                         {% if user.is_authenticated %}
-                            <!-- Hide  dropdown on small screens, show from lg and up -->
-                            <div class="nav-item dropdown d-none d-lg-block">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-regular fa-user fs-5 me-1"></i>
-                                    <span class="d-none d-lg-inline fw-bold small">
-                                        {% if user.is_superuser %}
-                                            Admin
-                                        {% else %}
-                                            {{ user.username }}
-                                        {% endif %}
-                                    </span>
+                            <div class="dropdown">
+                                <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-avatar shadow-sm">
+                                        {{ user.username|make_list|first|upper }}
+                                    </div>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 mt-2" aria-labelledby="navbarDropdown">
+                                    <li class="px-3 py-2 border-bottom">
+                                        <p class="mb-0 fw-bold text-dark">{{ user.username }}</p>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </li>
                                     {% if user.is_superuser %}
-                                        <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
-                                        <li><a class="dropdown-item" href="/admin/">Admin Panel</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt me-2 text-muted"></i>Dashboard</a></li>
+                                        <li><a class="dropdown-item py-2" href="/admin/"><i class="fas fa-cogs me-2 text-muted"></i>Admin Panel</a></li>
                                     {% else %}
-                                        <li><a class="dropdown-item" href="{% url 'user_dashboard' %}">Dashboard</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'seller_dashboard' %}">Seller Dashboard</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'my_account' %}">My Account</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'order_list' %}">My Orders</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'user_dashboard' %}"><i class="fas fa-user me-2 text-muted"></i>My Dashboard</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'seller_dashboard' %}"><i class="fas fa-store me-2 text-muted"></i>Seller Portal</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'my_account' %}"><i class="fas fa-cog me-2 text-muted"></i>Settings</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'order_list' %}"><i class="fas fa-box me-2 text-muted"></i>My Orders</a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                        <form action="{% url 'logout' %}" method="post" class="d-inline w-100">
                                             {% csrf_token %}
-                                            <button type="submit" class="dropdown-item">Logout</button>
+                                            <button type="submit" class="dropdown-item py-2 text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
                                         </form>
                                     </li>
                                 </ul>
                             </div>
-
-                            <!-- Extra visible account entry for small screens only -->
-                            <a href="{% url 'account' %}" class="nav-link d-lg-none">
-                                <i class="fa-regular fa-user fs-5 me-1"></i>
-                                <span class="small fw-bold">Account & Orders</span>
-                            </a>
                         {% else %}
-                            <a href="{% url 'login' %}" class="nav-link text-dark">
-                                <i class="fa-regular fa-user fs-5"></i>
-                                <span class="d-none d-lg-inline small fw-bold">Account</span>
-                            </a>
+                            <a href="{% url 'login' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">Login</a>
                         {% endif %}
-                        <a href="{% url 'cart' %}" class="nav-link text-dark position-relative ms-3 d-flex align-items-center">
-                            <div class="position-relative">
-                                <i class="fa-solid fa-cart-shopping fs-5"></i>
-                                {% if cart_item_count and cart_item_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style="font-size: 0.65rem; padding: 0.25em 0.45em;">
-                                    {{ cart_item_count }}
-                                </span>
-                                {% endif %}
-                            </div>
-                            <span class="d-none d-lg-inline small fw-bold ms-2">Cart</span>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -124,45 +120,76 @@
         {% endblock %}
     </main>
 
-    <footer class="footer mt-4 py-4 bg-dark text-white">
+    <footer class="footer mt-4 py-5 bg-dark text-white">
         <div class="container">
             <div class="row">
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="text-uppercase mb-3">ReSource Loop</h5>
-                    <p class="small text-muted">Turning waste into worth across Kenya.</p>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary-green text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="fa-solid fa-recycle fa-sm"></i>
+                        </div>
+                        <h5 class="text-uppercase mb-0 fw-bold">ReSource Loop</h5>
+                    </div>
+                    <p class="small text-white-50 mb-4">Turning waste into worth across Kenya. Join the circular economy revolution today.</p>
+                    <div class="d-flex">
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fab fa-facebook-f"></i></a>
+                    </div>
                 </div>
                 <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="text-uppercase mb-3 small">Market</h5>
+                    <h6 class="text-uppercase mb-3 fw-bold text-primary-green">Market</h6>
                     <ul class="list-unstyled mb-0">
-                        <li><a href="#" class="text-white-50">Flash Deals</a></li>
-                        <li><a href="#" class="text-white-50">Verified Sellers</a></li>
+                        <li class="mb-2"><a href="{% url 'index' %}" class="text-white-50 text-decoration-none hover-white">Browse Items</a></li>
+                        <li class="mb-2"><a href="{% url 'add_listing' %}" class="text-white-50 text-decoration-none hover-white">Sell Waste</a></li>
+                        <li class="mb-2"><a href="{% url 'track_order' %}" class="text-white-50 text-decoration-none hover-white">Track Order</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="text-uppercase mb-3 small">Company</h5>
+                    <h6 class="text-uppercase mb-3 fw-bold text-primary-green">Company</h6>
                     <ul class="list-unstyled mb-0">
-                        <li><a href="#" class="text-white-50">About Us</a></li>
-                        <li><a href="#" class="text-white-50">Careers</a></li>
+                        <li class="mb-2"><a href="{% url 'about' %}" class="text-white-50 text-decoration-none hover-white">About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none hover-white">Contact Us</a></li>
+                        <li class="mb-2"><a href="{% url 'faq' %}" class="text-white-50 text-decoration-none hover-white">FAQ</a></li>
+                        <li class="mb-2"><a href="{% url 'privacy' %}" class="text-white-50 text-decoration-none hover-white">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="{% url 'terms' %}" class="text-white-50 text-decoration-none hover-white">Terms of Service</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="text-uppercase mb-3 small">Newsletter</h5>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Email address">
-                        <button class="btn btn-primary" type="button">Subscribe</button>
-                    </div>
+                    <h6 class="text-uppercase mb-3 fw-bold text-primary-green">Newsletter</h6>
+                    <p class="small text-white-50 mb-3">Subscribe to get updates on new listings and recycling tips.</p>
+                    <form action="{% url 'newsletter_signup' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="Email address" required>
+                            <button class="btn btn-primary" type="submit">Subscribe</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="d-flex justify-content-between pt-4 mt-4 border-top border-secondary">
-                <p class="small text-muted">&copy; 2025 ReSource Loop Kenya.</p>
-                <div>
-                    <a href="#" class="text-white-50 me-3"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-white-50 me-3"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="text-white-50"><i class="fab fa-facebook"></i></a>
-                </div>
+            <div class="pt-4 mt-4 border-top border-secondary text-center">
+                <p class="small text-white-50 mb-0">&copy; {% now "Y" %} ReSource Loop Kenya. All rights reserved.</p>
             </div>
         </div>
     </footer>
+    <button id="backToTop" class="btn btn-primary rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4" style="display: none; z-index: 1000; width: 50px; height: 50px;">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Back to Top Button
+        const backToTopBtn = document.getElementById('backToTop');
+        window.onscroll = function() {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        };
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+    </script>
 </body>
 </html>

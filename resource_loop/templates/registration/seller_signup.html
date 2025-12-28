@@ -56,4 +56,40 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationsData = {{ kenya_locations_json|safe }};
+
+    function setupLocationDropdowns(countyId, subCountyId) {
+        const countySelect = document.getElementById(countyId);
+        const subCountySelect = document.getElementById(subCountyId);
+
+        if (countySelect && subCountySelect) {
+            countySelect.addEventListener('change', function() {
+                const selectedCounty = this.value;
+                
+                // Clear existing options
+                subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+                
+                if (selectedCounty && locationsData[selectedCounty]) {
+                    const subCounties = locationsData[selectedCounty];
+                    subCounties.forEach(function(sc) {
+                        const option = document.createElement('option');
+                        option.value = sc;
+                        option.textContent = sc;
+                        subCountySelect.appendChild(option);
+                    });
+                }
+            });
+        }
+    }
+
+    // Setup for Buyer Profile (Contact Info)
+    setupLocationDropdowns('id_buyer-county', 'id_buyer-sub_county');
+
+    // Setup for Seller Profile (Business Details)
+    setupLocationDropdowns('id_seller-county', 'id_seller-sub_county');
+});
+</script>
 {% endblock %}

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cloudinary',
+    'anymail', # Email API Provider
     'marketplace',
     # 'mpesa', # Uncomment if you have an mpesa app
 ]
@@ -182,5 +183,53 @@ CONSUMER_SECRET = os.environ.get('CONSUMER_SECRET')
 SHORTCODE = os.environ.get('SHORTCODE', '174379')
 PASSKEY = os.environ.get('PASSKEY')
 CALLBACK_URL = os.environ.get('CALLBACK_URL', '')
-# 10. WHITENOISE SETTINGS
+
+# 10. EMAIL SETTINGS (Using Brevo API via Anymail)
+# This uses HTTP (port 80/443) instead of SMTP (port 587/465) to bypass network blocks.
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com')
+
+ANYMAIL = {
+    "BREVO_API_KEY": os.environ.get('BREVO_API_KEY'),
+}
+
+# Fallback to console if no API key is set (for local dev without internet/key)
+if not os.environ.get('BREVO_API_KEY'):
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# 11. WHITENOISE SETTINGS
 WHITENOISE_KEEP_ONLY_HASHED_FILES = False
+
+# 12. CELERY SETTINGS
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+# Run tasks synchronously locally to avoid Redis requirement for dev
+CELERY_TASK_ALWAYS_EAGER = DEBUG 
+
+
+# 13. REST FRAMEWORK
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        'otp': '5/hour',
+    }
+}
+
+
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'localhost:8000')

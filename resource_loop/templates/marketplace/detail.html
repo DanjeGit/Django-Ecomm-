@@ -1,70 +1,147 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container pt-4">
-    <nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none text-muted">Home</a></li><li class="breadcrumb-item active">{{ item.title }}</li></ol></nav>
-    <div class="row g-4">
-        <div class="col-lg-9">
-            <div class="bg-white p-4 rounded shadow-sm border mb-4">
-                <div class="row g-5">
-                    <div class="col-md-5">
-                        <div class="border rounded p-3 d-flex align-items-center justify-content-center" style="height: 360px;">
-                            {% if item.image %}<img src="{{ item.image.url }}" class="img-fluid" style="max-height:100%">{% else %}<img src="https://placehold.co/400" class="img-fluid">{% endif %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ item.title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4" style="min-height: 400px;">
+                            {% if item.image %}
+                                <img src="{{ item.image.url }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 350px; object-fit: contain;" alt="{{ item.title }}">
+                            {% else %}
+                                <div class="text-center text-muted">
+                                    <i class="fa-solid fa-image fa-4x mb-3 opacity-50"></i>
+                                    <p class="mb-0">No image available</p>
+                                </div>
+                            {% endif %}
                         </div>
-                    </div>
-                    <div class="col-md-7">
-                        {% if item.is_verified_seller %}<span class="badge bg-primary mb-2">VERIFIED SELLER</span>{% endif %}
-                        <h1 class="h4 fw-bold mb-2">{{ item.title }}</h1>
-                        <div class="mb-3 text-warning small"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><span class="text-muted ms-2">({{ item.reviews_count }} Ratings)</span></div>
-                        <h2 class="h3 fw-bold" style="color:#1b4332">KES {{ item.price }}</h2>
-
-                        <form action="{% url 'add_to_cart' item.id %}" method="post" class="mt-3">
-                            {% csrf_token %}
-                                    <div class="d-flex align-items-center gap-2 mb-3">
-                                            <label for="quantity" class="small text-muted mb-0">Quantity</label>
-                                            <div class="input-group" style="max-width: 180px;">
-                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity'); q.value=Math.max(1, parseInt(q.value||'1')-1);">–</button>
-                                                <input id="quantity" type="number" name="quantity" value="1" min="1" class="form-control text-center">
-                                                <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('quantity'); q.value=parseInt(q.value||'1')+1;">+</button>
-                                            </div>
+                        <div class="col-md-6 p-4 p-lg-5 d-flex flex-column">
+                            <div class="mb-auto">
+                                {% if item.is_verified_seller %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 mb-3">
+                                        <i class="fa-solid fa-check-circle me-1"></i> Verified Seller
+                                    </span>
+                                {% endif %}
+                                <h1 class="h3 fw-bold mb-2">{{ item.title }}</h1>
+                                <div class="mb-4 d-flex align-items-center">
+                                    <div class="text-warning small me-2">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-regular fa-star"></i>
                                     </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100"><i class="fa-solid fa-cart-shopping me-2"></i> Add to Cart</button>
-                        </form>
+                                    <span class="text-muted small">({{ item.reviews_count }} reviews)</span>
+                                </div>
+                                <h2 class="display-6 fw-bold text-primary mb-4">KES {{ item.price|floatformat:0 }}</h2>
+                                
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center text-muted small mb-2">
+                                        <i class="fa-solid fa-location-dot me-2"></i> {{ item.location|default:"Nairobi, Kenya" }}
+                                    </div>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="fa-solid fa-box me-2"></i> {{ item.stock_quantity }} in stock
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form action="{% url 'add_to_cart' item.id %}" method="post" class="mt-4">
+                                {% csrf_token %}
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <div class="input-group input-group-lg rounded-pill overflow-hidden border" style="width: 140px;">
+                                        <button class="btn btn-light border-0" type="button" onclick="const q=document.getElementById('quantity'); q.value=Math.max(1, parseInt(q.value||'1')-1);"><i class="fa-solid fa-minus small"></i></button>
+                                        <input id="quantity" type="number" name="quantity" value="1" min="1" class="form-control text-center border-0 bg-white">
+                                        <button class="btn btn-light border-0" type="button" onclick="const q=document.getElementById('quantity'); q.value=parseInt(q.value||'1')+1;"><i class="fa-solid fa-plus small"></i></button>
+                                    </div>
+                                    <span class="text-muted small">Quantity</span>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                                    <i class="fa-solid fa-cart-plus me-2"></i> Add to Cart
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded shadow-sm border p-3">
-                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="desc-tab" data-bs-toggle="pill" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">Description</button>
-                  </li>
-                  {% if item.specifications %}
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="specs-tab" data-bs-toggle="pill" data-bs-target="#specs" type="button" role="tab" aria-controls="specs" aria-selected="false">Specifications</button>
-                  </li>
-                  {% endif %}
-                </ul>
-                <div class="tab-content" id="pills-tabContent">
-                  <div class="tab-pane fade show active" id="desc" role="tabpanel" aria-labelledby="desc-tab">
-                    <p class="text-secondary mb-0">{{ item.description|linebreaks }}</p>
-                  </div>
-                  {% if item.specifications %}
-                  <div class="tab-pane fade" id="specs" role="tabpanel" aria-labelledby="specs-tab">
-                    <pre class="bg-light p-3 rounded mb-0">{{ item.specifications }}</pre>
-                  </div>
-                  {% endif %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom border-light px-4 pt-4 pb-0">
+                    <ul class="nav nav-tabs card-header-tabs border-0" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active border-0 border-bottom border-primary border-3 rounded-0 fw-bold text-dark pb-3" id="desc-tab" data-bs-toggle="pill" data-bs-target="#desc" type="button" role="tab">Description</button>
+                        </li>
+                        {% if item.specifications %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link border-0 text-muted pb-3" id="specs-tab" data-bs-toggle="pill" data-bs-target="#specs" type="button" role="tab">Specifications</button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active" id="desc" role="tabpanel">
+                            <p class="text-secondary mb-0 lh-lg">{{ item.description|linebreaks }}</p>
+                        </div>
+                        {% if item.specifications %}
+                        <div class="tab-pane fade" id="specs" role="tabpanel">
+                            <div class="bg-light p-4 rounded-3">
+                                <pre class="mb-0 text-secondary" style="white-space: pre-wrap; font-family: inherit;">{{ item.specifications }}</pre>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3">
-            <div class="bg-white p-3 rounded shadow-sm border mb-3">
-                <h6 class="small fw-bold text-muted text-uppercase mb-3">Delivery</h6>
-                <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-success me-2">Standard</span>
-                    <div class="small">Door Delivery • <span class="text-muted">Ready by tomorrow</span></div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Delivery Options</h6>
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3 text-primary">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 small fw-bold">Standard Delivery</h6>
+                            <p class="text-muted small mb-0">Delivery within 24-48 hours</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3 text-success">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 small fw-bold">Buyer Protection</h6>
+                            <p class="text-muted small mb-0">Full refund if item is not as described</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="small text-muted">Ships from: <strong>{{ item.location }}</strong></div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Seller Information</h6>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <i class="fa-regular fa-user text-muted"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 small fw-bold">{{ item.seller.business_name }}</h6>
+                            <small class="text-muted">Joined {{ item.seller.user.date_joined|date:"M Y" }}</small>
+                        </div>
+                    </div>
+                    <a href="{% url 'seller_profile_public' item.seller.id %}" class="btn btn-outline-dark btn-sm w-100 rounded-pill">View Profile</a>
+                </div>
             </div>
         </div>
     </div>

@@ -8,7 +8,7 @@
             <h2 class="fw-bold mb-1">Seller Dashboard</h2>
             <p class="text-muted mb-0">Manage your listings and track your sales performance.</p>
         </div>
-        <a href="{% url 'add_listing' %}" class="btn btn-primary shadow-sm">
+        <a href="{% url 'add_listing' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
             <i class="fa-solid fa-plus me-2"></i>Add New Listing
         </a>
     </div>
@@ -16,91 +16,95 @@
     <!-- Stats Overview -->
     <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-white">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
-                            <i class="fa-solid fa-coins text-success fs-4"></i>
-                        </div>
-                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Total Sales</h6>
+            <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="fa-solid fa-coins fa-4x text-success"></i>
                     </div>
-                    <h3 class="mb-0 fw-bold">KSh {{ total_sales|floatformat:2 }}</h3>
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2">Total Sales</h6>
+                    <h2 class="display-5 fw-bold mb-0">KSh {{ total_sales|floatformat:0 }}</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-white">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                            <i class="fa-solid fa-box-open text-primary fs-4"></i>
-                        </div>
-                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Active Listings</h6>
+            <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="fa-solid fa-box-open fa-4x text-primary"></i>
                     </div>
-                    <h3 class="mb-0 fw-bold">{{ active_listings_count }}</h3>
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2">Active Listings</h6>
+                    <h2 class="display-5 fw-bold mb-0">{{ active_listings_count }}</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-white">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
-                            <i class="fa-solid fa-truck-fast text-warning fs-4"></i>
-                        </div>
-                        <h6 class="text-muted text-uppercase small mb-0 fw-bold">Items Sold</h6>
+            <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="fa-solid fa-truck-fast fa-4x text-warning"></i>
                     </div>
-                    <h3 class="mb-0 fw-bold">{{ items_sold_count }}</h3>
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2">Items Sold</h6>
+                    <h2 class="display-5 fw-bold mb-0">{{ items_sold_count }}</h2>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Recent Sales -->
-    <div class="card border-0 shadow-sm mb-5">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Recent Sales</h5>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">Recent Sales</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Order ID</th>
-                            <th>Item</th>
-                            <th>Buyer</th>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Status</th>
+                            <th class="border-0 py-3 ps-4">Order ID</th>
+                            <th class="border-0 py-3">Item</th>
+                            <th class="border-0 py-3">Buyer</th>
+                            <th class="border-0 py-3">Date</th>
+                            <th class="border-0 py-3">Amount</th>
+                            <th class="border-0 py-3">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for sale in recent_sales %}
                         <tr>
-                            <td class="ps-4">#{{ sale.order.order_uuid|stringformat:"s"|slice:":8" }}</td>
+                            <td class="ps-4 fw-bold">#{{ sale.order.order_uuid|stringformat:"s"|slice:":8" }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if sale.item.image %}
-                                    <img src="{{ sale.item.image.url }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <img src="{{ sale.item.image.url }}" class="rounded-3 me-3 object-fit-cover" style="width: 48px; height: 48px;">
                                     {% else %}
-                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div class="bg-light rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                                         <i class="fa-solid fa-image text-muted"></i>
                                     </div>
                                     {% endif %}
-                                    <span>{{ sale.item.title }}</span>
+                                    <span class="fw-medium">{{ sale.item.title }}</span>
                                 </div>
                             </td>
-                            <td>{{ sale.order.user.username }}</td>
-                            <td>{{ sale.order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <span class="text-primary fw-bold small">{{ sale.order.user.first_name|first|default:sale.order.user.username|first|upper }}</span>
+                                    </div>
+                                    {{ sale.order.user.first_name|default:sale.order.user.username }}
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ sale.order.created_at|date:"M d, Y" }}</td>
                             <td class="fw-bold">KSh {{ sale.price|floatformat:2 }}</td>
                             <td>
-                                <span class="badge bg-success bg-opacity-10 text-success">Sold</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Sold</span>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                No sales yet.
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-box-open fa-3x mb-3 opacity-50"></i>
+                                    <p class="mb-0">No sales yet. Keep listing items!</p>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -111,21 +115,21 @@
     </div>
 
     <!-- My Listings -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">My Listings</h5>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold">My Listings</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Item</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Views</th>
-                            <th>Status</th>
-                            <th class="text-end pe-4">Actions</th>
+                            <th class="border-0 py-3 ps-4">Item</th>
+                            <th class="border-0 py-3">Price</th>
+                            <th class="border-0 py-3">Stock</th>
+                            <th class="border-0 py-3">Views</th>
+                            <th class="border-0 py-3">Status</th>
+                            <th class="border-0 py-3 text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,33 +138,36 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     {% if item.image %}
-                                    <img src="{{ item.image.url }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <img src="{{ item.image.url }}" class="rounded-3 me-3 object-fit-cover" style="width: 48px; height: 48px;">
                                     {% else %}
-                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div class="bg-light rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                                         <i class="fa-solid fa-image text-muted"></i>
                                     </div>
                                     {% endif %}
                                     <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none text-dark fw-medium">{{ item.title }}</a>
                                 </div>
                             </td>
-                            <td>KSh {{ item.price|floatformat:2 }}</td>
+                            <td class="fw-bold">KSh {{ item.price|floatformat:2 }}</td>
                             <td>{{ item.stock_quantity }}</td>
-                            <td>{{ item.reviews_count }}</td> <!-- Using reviews_count as placeholder for views if needed, or add views field later -->
+                            <td>{{ item.reviews_count }}</td>
                             <td>
                                 {% if item.stock_quantity|add:"0" > 0 %}
-                                <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span>
                                 {% else %}
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary">Out of Stock</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Out of Stock</span>
                                 {% endif %}
                             </td>
                             <td class="text-end pe-4">
-                                <a href="{% url 'item_detail' item.slug %}" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a href="{% url 'item_detail' item.slug %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">View</a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                You haven't listed any items yet.
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-tags fa-3x mb-3 opacity-50"></i>
+                                    <p class="mb-0">You haven't listed any items yet.</p>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}

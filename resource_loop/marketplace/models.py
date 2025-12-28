@@ -2,7 +2,37 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.urls import reverse
+from django.utils import timezone
 import uuid
+import random
+
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otps')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+
+    def is_valid(self):
+        # Valid for 5 minutes
+        return not self.is_used and (timezone.now() - self.created_at).total_seconds() < 300
+
+    def __str__(self):
+        return f"OTP for {self.user.username}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    link = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.title}"
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -45,6 +75,8 @@ class WasteItem(models.Model):
     # Categorization
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='used')
     location = models.CharField(max_length=100, default="Kenya", help_text="Location of the item")
+    county = models.CharField(max_length=100, blank=True, null=True)
+    sub_county = models.CharField(max_length=100, blank=True, null=True)
 
     
     # Visuals & Trust
@@ -103,6 +135,8 @@ class BuyerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buyerprofile')
     phone_number = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=100, blank=True)
+    county = models.CharField(max_length=100, blank=True, null=True)
+    sub_county = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f"Profile of {self.user.username}"
@@ -112,6 +146,10 @@ class SellerProfile(models.Model):
     business_name = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False)
     payment_number = models.CharField(max_length=20, blank=True, help_text="M-Pesa number for receiving payments")
+    county = models.CharField(max_length=100, blank=True, null=True)
+    sub_county = models.CharField(max_length=100, blank=True, null=True)
+    profile_image = models.ImageField(upload_to='seller_profiles/', blank=True, null=True)
+    description = models.TextField(blank=True, help_text="About the seller")
 
     def __str__(self):
         return self.business_name
@@ -134,6 +172,7 @@ class Transaction(models.Model):
     # STK identifiers to prevent duplication and link callbacks
     merchant_request_id = models.CharField(max_length=100, blank=True, null=True)
     checkout_request_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True, help_text="M-Pesa Receipt Number (e.g. QKH1234567)")
     # Link transaction to an order created at initiation
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
 
@@ -177,3 +216,22 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item.title if self.item else 'Item'} x{self.quantity}"
+
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.email
+
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_resolved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.subject} - {self.email}"

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .header h1 { color: #2c3e50; margin: 0; }
+        .progress-container { margin: 30px 0; text-align: center; }
+        .progress-steps { display: flex; justify-content: space-between; list-style: none; padding: 0; margin: 0; position: relative; }
+        .progress-steps::before { content: ''; position: absolute; top: 15px; left: 0; width: 100%; height: 2px; background-color: #e0e0e0; z-index: 0; }
+        .step { position: relative; z-index: 1; background-color: #fff; padding: 0 10px; }
+        .step-circle { width: 30px; height: 30px; border-radius: 50%; background-color: #e0e0e0; color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; font-weight: bold; }
+        .step.active .step-circle { background-color: #27ae60; }
+        .step-label { font-size: 12px; color: #7f8c8d; }
+        .step.active .step-label { color: #27ae60; font-weight: bold; }
+        .order-details { margin-top: 20px; }
+        .item-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
+        .item-image { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 15px; background-color: #f9f9f9; }
+        .item-info { flex-grow: 1; }
+        .item-title { font-weight: bold; color: #34495e; display: block; }
+        .item-meta { font-size: 13px; color: #7f8c8d; }
+        .total-section { text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; color: #2c3e50; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #95a5a6; }
+        .btn { display: inline-block; background-color: #3498db; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Resource Loop</h1>
+            <p>Thank you for your order!</p>
+        </div>
+
+        <div class="progress-container">
+            <ul class="progress-steps">
+                <li class="step active">
+                    <div class="step-circle">✓</div>
+                    <div class="step-label">Placed</div>
+                </li>
+                <li class="step active">
+                    <div class="step-circle">✓</div>
+                    <div class="step-label">Paid</div>
+                </li>
+                <li class="step">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Processing</div>
+                </li>
+                <li class="step">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Shipped</div>
+                </li>
+                <li class="step">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">Delivered</div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <p>Hello <strong>{{ user.username }}</strong>,</p>
+            <p>We have received your payment and your order is now being processed by the seller(s).</p>
+            
+            <div class="order-details">
+                <h3>Order #{{ order.id }}</h3>
+                {% for item in order.items.all %}
+                <div class="item-row">
+                    {% if item.item.image %}
+                    <img src="{{ domain }}{{ item.item.image.url }}" alt="{{ item.item.title }}" class="item-image">
+                    {% else %}
+                    <div class="item-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;">No Img</div>
+                    {% endif %}
+                    <div class="item-info">
+                        <span class="item-title">{{ item.item.title }}</span>
+                        <span class="item-meta">Qty: {{ item.quantity }} | Price: KES {{ item.price }}</span>
+                    </div>
+                    <div class="item-total">
+                        KES {{ item.price }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="total-section">
+                Total: KES {{ order.total_amount }}
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ domain }}/orders/{{ order.id }}/" class="btn">View Order Details</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; {{ year }} Resource Loop. All rights reserved.</p>
+            <p>Together for a cleaner future.</p>
+        </div>
+    </div>
+</body>
+</html>

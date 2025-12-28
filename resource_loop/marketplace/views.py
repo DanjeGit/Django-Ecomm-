@@ -17,8 +17,98 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.db.models import Count
 from django.conf import settings
+from django.core.mail import send_mail
 from mpesa.utils import stk_push
 import json
+import random
+import time
+import uuid
+from .models import OTP
+from .locations import KENYA_LOCATIONS
+from django.template.loader import render_to_string
+from django.utils import timezone
+
+def calculate_shipping_fee(seller_county, buyer_county):
+    """
+    Calculate shipping fee based on location.
+    Same county: KSh 200
+    Different county: KSh 500
+    Unknown: KSh 300
+    """
+    if not seller_county or not buyer_county:
+        return 300
+    
+    if seller_county.lower().strip() == buyer_county.lower().strip():
+        return 200
+    else:
+        return 500
+
+def send_otp_email(user, otp):
+    print(f"📧 Preparing to send OTP {otp} to {user.email}...")
+    # Import here to avoid circular import or startup errors
+    try:
+        from .tasks import send_email_task
+        # Use Celery task
+        message = f'Your verification code is: {otp}\n\nThe code will expire in 15 minutes.'
+        send_email_task.delay(
+            'Verify your Resource Loop Account',
+            message,
+            [user.email]
+        )
+    except ImportError:
+        # Fallback if Celery is not set up
+        from django.core.mail import send_mail
+        send_mail(
+            'Verify your Resource Loop Account',
+            f'Your verification code is: {otp}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False
+        )
+
+def verify_email_view(request):
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp')
+        user_id = request.session.get('verification_user_id')
+        
+        try:
+            user = User.objects.get(id=user_id)
+            # Check DB for valid OTP
+            otp_obj = OTP.objects.filter(user=user, code=otp_code, is_used=False).order_by('-created_at').first()
+            
+            if otp_obj and otp_obj.is_valid():
+                otp_obj.is_used = True
+                otp_obj.save()
+                
+                user.is_active = True
+                user.save()
+                
+                # Clear session data
+                if 'verification_user_id' in request.session: del request.session['verification_user_id']
+                is_login = request.session.pop('is_login_verification', False)
+                
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
+                login(request, user)
+                
+                if is_login:
+                    messages.success(request, f"Welcome back, {user.username}!")
+                else:
+                    messages.success(request, f"Email verified! Welcome, {user.username}!")
+                
+                if user.is_superuser:
+                    return redirect('/admin/')
+                # If user has a seller profile, prefer seller dashboard
+                if hasattr(user, 'sellerprofile'):
+                    return redirect('seller_dashboard')
+                return redirect('index')
+            else:
+                return render(request, 'registration/verify_email.html', {'error_message': 'Invalid or expired OTP.'})
+                
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+            return redirect('signup')
+            
+    return render(request, 'registration/verify_email.html')
 
 def index(request):
     categories = Category.objects.all()
@@ -121,9 +211,6 @@ def dashboard(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:
             return redirect('admin_dashboard')
-        # Check if user has sold items before, or just default to user dashboard
-        # For now, let's make a simple logic: if they have a seller profile, maybe send them to seller dashboard?
-        # Or better, keep user dashboard as default and add a link to seller dashboard.
         return redirect('user_dashboard')
     return redirect('index')
 
@@ -135,6 +222,17 @@ def user_dashboard(request):
     cart_items = cart.items.all() if cart else []
     total_cart_value = sum(ci.item.price * ci.quantity for ci in cart_items) if cart_items else 0
 
+    # Account Summary
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    total_orders = orders.count()
+    total_spent = sum(order.total_amount for order in orders)
+    pending_orders = orders.filter(status__in=['placed', 'confirmed', 'processing']).count()
+
+    # Recommended Items (Simple logic: Items not in cart, random selection)
+    # In a real app, this would be based on purchase history
+    all_items = list(WasteItem.objects.filter(stock_quantity__gt=0).exclude(seller__user=request.user))
+    recommended_items = random.sample(all_items, min(len(all_items), 4))
+
     recent_items = WasteItem.objects.order_by('-created_at')[:8]
     categories = Category.objects.all()
 
@@ -143,6 +241,11 @@ def user_dashboard(request):
         'cart_items': cart_items,
         'total_cart_value': total_cart_value,
         'recent_items': recent_items,
+        'total_orders': total_orders,
+        'total_spent': total_spent,
+        'pending_orders': pending_orders,
+        'recommended_items': recommended_items,
+        'recent_orders': orders[:5],
     }
     return render(request, 'marketplace/dashboard_user.html', context)
 
@@ -173,8 +276,16 @@ def admin_dashboard(request):
     }
     return render(request, 'marketplace/dashboard_admin.html', context)
 
+def seller_profile_public(request, seller_id):
+    seller = get_object_or_404(SellerProfile, id=seller_id)
+    items = WasteItem.objects.filter(seller=seller, stock_quantity__gt=0)
+    
+    context = {
+        'seller': seller,
+        'items': items,
+    }
+    return render(request, 'marketplace/seller_profile_public.html', context)
 
-@login_required
 @login_required
 def add_listing(request):
     # Ensure user is a seller
@@ -190,6 +301,11 @@ def add_listing(request):
 
         category_id = request.POST.get('category')
         category = get_object_or_404(Category, id=category_id) if category_id else None
+        
+        county = request.POST.get('county')
+        sub_county = request.POST.get('sub_county')
+        # Construct location string from county/subcounty if provided, else fallback
+        location = f"{sub_county}, {county}" if county and sub_county else request.POST.get('location', '')
 
         item = WasteItem.objects.create(
             seller=seller_profile,
@@ -200,20 +316,29 @@ def add_listing(request):
             price=request.POST.get('price') or 0,
             stock_quantity=request.POST.get('quantity') or 1,
             condition=request.POST.get('condition', 'used'),
-            location=request.POST.get('location', ''),
+            location=location,
+            county=county,
+            sub_county=sub_county,
             image=request.FILES.get('image')
         )
         return redirect('item_detail', slug=item.slug)
 
     context = {
         'categories': categories,
-        'condition_choices': condition_choices
+        'condition_choices': condition_choices,
+        'kenya_locations_json': json.dumps(KENYA_LOCATIONS)
     }
     return render(request, 'marketplace/add_listing.html', context)
 
 @require_POST
 def add_to_cart(request, item_id):
     item = get_object_or_404(WasteItem, id=item_id)
+    
+    # Prevent self-purchase
+    if request.user.is_authenticated and item.seller.user == request.user:
+        messages.error(request, "You cannot buy your own item.")
+        return redirect('item_detail', slug=item.slug)
+
     quantity = int(request.POST.get('quantity', 1))
     if request.user.is_authenticated:
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -265,12 +390,38 @@ def checkout_view(request):
         return redirect('login')
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.select_related('item').all()
-    total = cart.get_total_price()
+    cart_items = cart.items.select_related('item', 'item__seller').all()
+    
+    # Check for self-owned items
+    for cart_item in cart_items:
+        if cart_item.item.seller.user == request.user:
+            messages.error(request, f"You cannot purchase your own item: {cart_item.item.title}. Please remove it from your cart.")
+            return redirect('cart')
+    
+    # Calculate Shipping
+    shipping_fee = 0
+    buyer_county = None
+    if hasattr(request.user, 'buyerprofile'):
+        buyer_county = request.user.buyerprofile.county
+    
+    processed_sellers = set()
+    
+    for cart_item in cart_items:
+        seller = cart_item.item.seller
+        if seller.id not in processed_sellers:
+            fee = calculate_shipping_fee(seller.county, buyer_county)
+            shipping_fee += fee
+            processed_sellers.add(seller.id)
+
+    subtotal = cart.get_total_price()
+    grand_total = float(subtotal) + shipping_fee
+    
     context = {
         'cart': cart,
         'cart_items': cart_items,
-        'total': total,
+        'subtotal': subtotal,
+        'shipping_fee': shipping_fee,
+        'total': grand_total,
     }
     return render(request, 'marketplace/checkout.html', context)
 
@@ -338,8 +489,30 @@ def signup_view(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)
         profile_form = BuyerProfileForm(request.POST)
+        
+        # Check if user already exists but is inactive (unverified)
+        email = request.POST.get('email')
+        existing_user = User.objects.filter(email=email).first()
+        
+        if existing_user and not existing_user.is_active:
+            # Resend OTP flow
+            # Update password if provided? For now, just resend OTP
+            otp_code = str(random.randint(100000, 999999))
+            OTP.objects.create(user=existing_user, code=otp_code)
+            request.session['verification_user_id'] = existing_user.id
+            
+            try:
+                send_otp_email(existing_user, otp_code)
+                messages.info(request, f"Account exists but unverified. New code sent to {existing_user.email}")
+                return redirect('verify_email')
+            except Exception as e:
+                print(f"Error sending OTP: {e}")
+                return redirect('verify_email')
+
         if user_form.is_valid() and profile_form.is_valid():
             user = user_form.save(commit=False)
+            # Auto-generate username from email
+            user.username = user.email
             user.set_password(user_form.cleaned_data['password'])
             user.save()
             
@@ -347,14 +520,26 @@ def signup_view(request):
             profile.user = user
             profile.save()
             
-            user = authenticate(request, username=user_form.cleaned_data['username'], password=user_form.cleaned_data['password'])
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            OTP.objects.create(user=user, code=otp_code)
             
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Welcome, {user.username}! Your account has been created successfully.")
-                if user.is_superuser:
-                    return redirect('/admin/')
-                return redirect('index')
+            # Store user ID in session for verification page
+            request.session['verification_user_id'] = user.id
+            
+            # Deactivate user until verified
+            user.is_active = False
+            user.save()
+            
+            # Send Email
+            try:
+                send_otp_email(user, otp_code)
+                messages.info(request, f"Verification code sent to {user.email}")
+                return redirect('verify_email')
+            except Exception as e:
+                # Log error but don't crash, user can request resend
+                print(f"Error sending OTP: {e}")
+                return redirect('verify_email')
         else:
             messages.error(request, "There was an error with your signup. Please check the details you provided.")
     else:
@@ -364,7 +549,8 @@ def signup_view(request):
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        'login_form': AuthenticationForm()
+        'login_form': AuthenticationForm(),
+        'kenya_locations_json': json.dumps(KENYA_LOCATIONS)
     }
     return render(request, 'registration/login_signup.html', context)
 
@@ -374,14 +560,24 @@ def login_view(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
-            messages.success(request, f"Welcome back, {user.username}!")
-            if user.is_superuser:
-                return redirect('admin_dashboard')
-            # If user has a seller profile, prefer seller dashboard
-            if hasattr(user, 'sellerprofile'):
-                return redirect('seller_dashboard')
-            return redirect('user_dashboard')
+            
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            OTP.objects.create(user=user, code=otp_code)
+            
+            # Store user ID in session for verification
+            request.session['verification_user_id'] = user.id
+            request.session['is_login_verification'] = True
+
+            # Send Email
+            try:
+                send_otp_email(user, otp_code)
+                messages.info(request, f"Verification code sent to {user.email}")
+                return redirect('verify_email')
+            except Exception as e:
+                print(f"Error sending OTP: {e}")
+                messages.error(request, "Error sending verification code.")
+                return redirect('signup')
         else:
             messages.error(request, "Invalid username or password. Please try again.")
     
@@ -435,7 +631,8 @@ def edit_profile_view(request):
 
     context = {
         'user_form': user_form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'kenya_locations_json': json.dumps(KENYA_LOCATIONS)
     }
     return render(request, 'marketplace/edit_profile.html', context)
 
@@ -521,92 +718,131 @@ def initiate_payment(request):
     return JsonResponse({"error": "POST request required"}, status=405)
 
 
+def send_seller_notifications(order):
+    """
+    Groups order items by seller and sends notifications (Email/SMS).
+    """                                                                                         
+    seller_items = {}
+    
+    # Group items by seller
+    for order_item in order.items.all():
+        if order_item.item and order_item.item.seller:
+            seller = order_item.item.seller
+            if seller not in seller_items:
+                seller_items[seller] = []
+            seller_items[seller].append(order_item)
+    
+    # Send notifications
+    for seller, items in seller_items.items():
+        # Prepare message
+        item_list = "\n".join([f"- {i.item.title} (x{i.quantity})" for i in items])
+        total_value = sum(i.price * i.quantity for i in items)
+        
+        subject = f"New Order Received! (Order #{order.id})"
+        message = (
+            f"Hello {seller.business_name},\n\n"
+            f"You have received a new order for the following items:\n"
+            f"{item_list}\n\n"
+            f"Total Value: KES {total_value}\n"
+            f"Please login to your dashboard to process this order.\n\n"
+            f"Regards,\nResource Loop Team"
+        )
+        
+        # 1. Send Email (Async)
+        if seller.user.email:
+            try:
+                from .tasks import send_email_task
+                # Render HTML email
+                context = {
+                    'seller': seller,
+                    'order': order,
+                    'items': items,
+                    'total_value': total_value,
+                    'domain': f"http://{settings.SITE_DOMAIN}" if not settings.SITE_DOMAIN.startswith('http') else settings.SITE_DOMAIN,
+                    'year': timezone.now().year
+                }
+                html_message = render_to_string('emails/seller_order_notification.html', context)
+                send_email_task.delay(subject, message, [seller.user.email], html_message=html_message)
+            except ImportError:
+                pass # Or fallback to sync send_mail
+        
+        # 2. Create In-App Notification (Async)
+        from .tasks import create_notification_task
+        create_notification_task.delay(
+            seller.user.id,
+            "New Order Received",
+            f"You have a new order #{order.id} worth KES {total_value}",
+            link=f"/orders/{order.id}/"
+        )
+        
+        # 3. Send SMS (Simulation)
+        phone = seller.payment_number
+        if phone:
+            print(f"📱 [SMS SIMULATION] To: {phone}")
+            print(f"   Message: You have a new order! Check your dashboard. Items: {len(items)}")
+
+
+def send_buyer_order_confirmation(order):
+    """
+    Sends an order confirmation email to the buyer.
+    """
+    if not order.user.email:
+        return
+
+    subject = f"Order Confirmation - Order #{order.id}"
+    
+    item_list = ""
+    for item in order.items.all():
+        item_list += f"- {item.item.title} (x{item.quantity}) @ KES {item.price}\n"
+    
+    message = (
+        f"Hello {order.user.username},\n\n"
+        f"Thank you for your order! Here are the details:\n\n"
+        f"{item_list}\n"
+        f"Total Amount: KES {order.total_amount}\n\n"
+        f"We will notify you when your items are on their way.\n\n"
+        f"Regards,\n\nResource Loop Team"
+    )
+    
+    # Async Email
+    try:
+        from .tasks import send_email_task
+        # Render HTML email
+        context = {
+            'order': order,
+            'items': order.items.all(),
+            'domain': f"http://{settings.SITE_DOMAIN}" if not settings.SITE_DOMAIN.startswith('http') else settings.SITE_DOMAIN,
+            'year': timezone.now().year
+        }
+        html_message = render_to_string('emails/buyer_order_confirmation.html', context)
+        send_email_task.delay(subject, message, [order.user.email], html_message=html_message)
+    except ImportError:
+        pass
+
+    # Async Notification
+    from .tasks import create_notification_task
+    create_notification_task.delay(
+        order.user.id,
+        "Order Confirmed",
+        f"Your order #{order.id} has been confirmed.",
+        link=f"/orders/{order.id}/"
+    )
+
 @csrf_exempt
 def mpesa_callback(request):
-    """M-Pesa callback endpoint"""
+    """M-Pesa callback endpoint - Offloaded to Celery/Redis"""
     if request.method == "POST":
         try:
             callback_data = json.loads(request.body)
             
-            # Log the data to your console to verify it works
-            print("========== M-PESA CALLBACK RECEIVED ==========")
-            print(json.dumps(callback_data, indent=4)) 
+            print("========== M-PESA CALLBACK RECEIVED (Queuing Task) ==========")
+            
+            # Offload processing to Celery Task (Redis)
+            from .tasks import process_mpesa_callback_task
+            process_mpesa_callback_task.delay(callback_data)
 
-            # Extract details for transaction recording
-            body = callback_data.get('Body', {})
-            stk_cb = body.get('stkCallback', {})
-            result_code = stk_cb.get('ResultCode')
-            checkout_request_id = stk_cb.get('CheckoutRequestID')
-            metadata = stk_cb.get('CallbackMetadata', {})
-            items = metadata.get('Item', []) if isinstance(metadata, dict) else []
-
-            amount = None
-            phone = None
-            mpesa_name = ''
-            # Parse typical M-Pesa callback metadata items
-            for it in items:
-                name = it.get('Name')
-                val = it.get('Value')
-                if name == 'Amount':
-                    amount = val
-                elif name in ('PhoneNumber', 'MSISDN'):
-                    phone = str(val)
-                elif name in ('FirstName', 'MiddleName', 'LastName'):
-                    mpesa_name = (mpesa_name + ' ' + str(val)).strip()
-
-            # Find user by phone in BuyerProfile
-            user = None
-            if phone:
-                try:
-                    bp = BuyerProfile.objects.get(phone_number=phone)
-                    user = bp.user
-                except BuyerProfile.DoesNotExist:
-                    user = None
-
-            # Update the single transaction and its order based on result
-            if checkout_request_id:
-                tx = Transaction.objects.filter(checkout_request_id=checkout_request_id).first()
-
-                if tx:
-                    if result_code == 0:
-                        tx.state = 'confirmed'
-                        tx.mpesa_name = mpesa_name or (user.get_full_name() if user else '')
-                        tx.phone_number = phone or tx.phone_number
-                        tx.save()
-                        # Update order status to confirmed
-                        if tx.order:
-                            tx.order.status = 'confirmed'
-                            tx.order.save()
-                            
-                            # Reduce stock quantity
-                            for order_item in tx.order.items.all():
-                                if order_item.item:
-                                    try:
-                                        current_stock = int(order_item.item.stock_quantity)
-                                        new_stock = max(0, current_stock - order_item.quantity)
-                                        order_item.item.stock_quantity = str(new_stock)
-                                        order_item.item.save()
-                                    except ValueError:
-                                        # Handle cases where stock is not a number (e.g. "5 tons")
-                                        pass
-
-                        # Clear cart after confirmation
-                        try:
-                            if user:
-                                cart = Cart.objects.get(user=user)
-                                cart.items.all().delete()
-                        except Cart.DoesNotExist:
-                            pass
-                    else:
-                        tx.state = 'cancelled'
-                        tx.mpesa_name = mpesa_name or (user.get_full_name() if user else '')
-                        tx.phone_number = phone or tx.phone_number
-                        tx.save()
-                        if tx.order:
-                            tx.order.status = 'cancelled'
-                            tx.order.save()
-
-            return JsonResponse({"ResultCode": 0, "ResultDesc": "Callback received"})
+            # Return 200 OK immediately to Safaricom
+            return JsonResponse({"ResultCode": 0, "ResultDesc": "Callback received and queued"})
             
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -647,12 +883,14 @@ def seller_dashboard(request):
 
 def seller_signup_view(request):
     if request.method == 'POST':
-        user_form = UserForm(request.POST)
-        buyer_profile_form = BuyerProfileForm(request.POST) # We still need this for phone/location
-        seller_profile_form = SellerProfileForm(request.POST)
+        user_form = UserForm(request.POST, prefix='user')
+        buyer_profile_form = BuyerProfileForm(request.POST, prefix='buyer')
+        seller_profile_form = SellerProfileForm(request.POST, prefix='seller')
         
         if user_form.is_valid() and buyer_profile_form.is_valid() and seller_profile_form.is_valid():
             user = user_form.save(commit=False)
+            # Auto-generate username from email
+            user.username = user.email
             user.set_password(user_form.cleaned_data['password'])
             user.save()
             
@@ -666,23 +904,113 @@ def seller_signup_view(request):
             seller_profile.user = user
             seller_profile.save()
             
-            user = authenticate(request, username=user_form.cleaned_data['username'], password=user_form.cleaned_data['password'])
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            OTP.objects.create(user=user, code=otp_code)
             
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Welcome, {user.username}! Your seller account has been created.")
-                return redirect('seller_dashboard')
+            # Store user ID in session
+            request.session['verification_user_id'] = user.id
+            
+            # Deactivate user until verified
+            user.is_active = False
+            user.save()
+            
+            # Send Email
+            try:
+                send_otp_email(user, otp_code)
+                messages.info(request, f"Verification code sent to {user.email}")
+                return redirect('verify_email')
+            except Exception as e:
+                print(f"Error sending OTP: {e}")
+                return redirect('verify_email')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        user_form = UserForm()
-        buyer_profile_form = BuyerProfileForm()
-        seller_profile_form = SellerProfileForm()
+        user_form = UserForm(prefix='user')
+        buyer_profile_form = BuyerProfileForm(prefix='buyer')
+        seller_profile_form = SellerProfileForm(prefix='seller')
         
     context = {
         'user_form': user_form,
         'buyer_profile_form': buyer_profile_form,
         'seller_profile_form': seller_profile_form,
-        'is_seller_signup': True
+        'is_seller_signup': True,
+        'kenya_locations_json': json.dumps(KENYA_LOCATIONS)
     }
     return render(request, 'registration/seller_signup.html', context)
+
+def track_order(request):
+    order = None
+    error = None
+    query = request.GET.get('q', '').strip()
+    
+    if query:
+        # 1. Try searching by Order UUID
+        try:
+            # Check if it looks like a UUID
+            uuid_obj = uuid.UUID(query)
+            order = Order.objects.filter(order_uuid=uuid_obj).first()
+        except ValueError:
+            pass
+            
+        # 2. If not found, try searching by M-Pesa Receipt Number
+        if not order:
+            transaction = Transaction.objects.filter(mpesa_receipt_number__iexact=query).first()
+            if transaction and transaction.order:
+                order = transaction.order
+        
+        # 3. If still not found, try searching by Order ID (if numeric)
+        if not order and query.isdigit():
+             order = Order.objects.filter(id=query).first()
+
+        if not order:
+            error = f"No order found with Tracking ID: {query}"
+
+    return render(request, 'marketplace/track_order.html', {
+        'order': order,
+        'error': error,
+        'query': query
+    })
+
+def about(request):
+    return render(request, 'marketplace/about.html')
+
+def contact(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        
+        # Save to DB (if migration works later)
+        try:
+            from .models import ContactMessage
+            ContactMessage.objects.create(name=name, email=email, subject=subject, message=message)
+            messages.success(request, "Your message has been sent! We will get back to you soon.")
+        except Exception:
+            # Fallback if model doesn't exist yet
+            messages.success(request, "Thank you for contacting us!")
+            
+        return redirect('contact')
+    return render(request, 'marketplace/contact.html')
+
+def privacy(request):
+    return render(request, 'marketplace/privacy.html')
+
+def terms(request):
+    return render(request, 'marketplace/terms.html')
+
+def faq(request):
+    return render(request, 'marketplace/faq.html')
+
+def newsletter_signup(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if email:
+            try:
+                from .models import NewsletterSubscriber
+                NewsletterSubscriber.objects.get_or_create(email=email)
+                messages.success(request, "Thanks for subscribing to our newsletter!")
+            except Exception:
+                messages.success(request, "Thanks for subscribing!")
+    return redirect(request.META.get('HTTP_REFERER', 'index'))
