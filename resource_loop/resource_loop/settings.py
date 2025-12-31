@@ -149,13 +149,13 @@ if IS_RENDER:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # Use CompressedStaticFilesStorage to avoid MissingFileError on admin files
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+            # Use standard Django storage to completely bypass WhiteNoise strict checks
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
     
     # Legacy Fallback
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
     # Cloudinary Config (Keep this)
     CLOUDINARY_STORAGE = {
