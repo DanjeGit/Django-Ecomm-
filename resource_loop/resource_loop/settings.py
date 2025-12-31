@@ -211,14 +211,14 @@ if not os.environ.get('BREVO_API_KEY'):
 WHITENOISE_KEEP_ONLY_HASHED_FILES = False
 
 # 12. CELERY SETTINGS
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-# Run tasks synchronously locally to avoid Redis requirement for dev
-CELERY_TASK_ALWAYS_EAGER = DEBUG 
+# Run tasks synchronously locally or if forced by env var (useful for free tier deployment without worker)
+CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', str(DEBUG)) == 'True'
 
 
 # 13. REST FRAMEWORK
