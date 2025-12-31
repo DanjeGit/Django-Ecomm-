@@ -149,12 +149,13 @@ if IS_RENDER:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            # Use CompressedStaticFilesStorage to avoid MissingFileError on admin files
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
     
     # Legacy Fallback
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
     # Cloudinary Config (Keep this)
     CLOUDINARY_STORAGE = {
