@@ -140,6 +140,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# DEBUG: Print paths to verify on Render
+print(f"DEBUG: BASE_DIR={BASE_DIR}")
+print(f"DEBUG: STATIC_ROOT={STATIC_ROOT}")
+print(f"DEBUG: STATICFILES_DIRS={STATICFILES_DIRS}")
+
 MEDIA_URL = '/media/'
 
 if IS_RENDER:
