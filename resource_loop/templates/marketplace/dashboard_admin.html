@@ -1,202 +1,421 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard_custom.css' %}">
+{% endblock %}
+
+{% block header %}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-5">
-    <div>
-        <h2 class="fw-bold mb-1">Admin Dashboard</h2>
-        <p class="text-muted mb-0">Overview of platform performance and statistics.</p>
+<!-- Sidebar -->
+<!-- Fixed Links -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h3 class="fw-bold text-primary m-0">ResourceLoop</h3>
     </div>
-    <span class="badge bg-dark rounded-pill px-3 py-2">Today: {{ now|default:"" }}</span>
-  </div>
+    <div class="sidebar-menu">
+        <div class="nav-item">
+            <a href="{% url 'admin_dashboard' %}" class="nav-link active">
+                <i class="fa-solid fa-table-columns"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:index' %}" class="nav-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Django Admin</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:marketplace_activitylog_changelist' %}" class="nav-link">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Activity Logs</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:auth_user_changelist' %}" class="nav-link">
+                <i class="fa-solid fa-users"></i>
+                <span>Users</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:marketplace_wasteitem_changelist' %}" class="nav-link">
+                <i class="fa-solid fa-box"></i>
+                <span>Products</span>
+            </a>
+        </div>
+        <div class="nav-item mt-4">
+            <a href="{% url 'logout' %}" class="nav-link text-danger">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</nav>
 
-  <!-- KPI Cards -->
-  <div class="row g-4 mb-5">
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
-        <div class="card-body p-4 position-relative">
-          <div class="position-absolute top-0 end-0 p-3 opacity-10">
-            <i class="fa-regular fa-user fa-4x text-primary"></i>
-          </div>
-          <h6 class="text-muted text-uppercase small fw-bold mb-2">Users</h6>
-          <h2 class="display-5 fw-bold mb-0">{{ total_users }}</h2>
+<!-- Main Panel -->
+<div class="main-panel">
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="d-flex align-items-center">
+            <h4 class="mb-0 fw-bold text-dark">Welcome back, {{ request.user.username }}!</h4>
         </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
-        <div class="card-body p-4 position-relative">
-          <div class="position-absolute top-0 end-0 p-3 opacity-10">
-            <i class="fa-solid fa-box fa-4x text-success"></i>
-          </div>
-          <h6 class="text-muted text-uppercase small fw-bold mb-2">Items</h6>
-          <h2 class="display-5 fw-bold mb-0">{{ total_items }}</h2>
+        <div class="d-flex align-items-center gap-4">
+            <form method="GET" action="{% url 'admin_dashboard' %}" class="search-bar d-none d-md-block">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="q" class="search-input" placeholder="Search items..." value="{{ request.GET.q|default:'' }}">
+            </form>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Notifications -->
+                <div class="position-relative dropdown">
+                    <a href="#" class="text-decoration-none text-muted" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-regular fa-bell fs-5"></i>
+                        {% if unread_notifications_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ unread_notifications_count }}
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li><h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span>Notifications</span>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ unread_notifications_count }} New</span>
+                            {% endif %}
+                        </h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        {% for notification in recent_notifications %}
+                        <li>
+                            <a class="dropdown-item p-3 {% if not notification.is_read %}bg-light{% endif %}" href="{% url 'mark_notification_read' notification.id %}">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fa-solid fa-bell"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 small fw-bold">{{ notification.title }}</h6>
+                                        <p class="mb-1 small text-muted text-truncate" style="max-width: 200px;">{{ notification.message }}</p>
+                                        <small class="text-muted" style="font-size: 0.7rem;">{{ notification.created_at|timesince }} ago</small>
+                                    </div>
+                                    {% if not notification.is_read %}
+                                    <div class="flex-shrink-0 ms-2">
+                                        <span class="d-inline-block bg-primary rounded-circle" style="width: 8px; height: 8px;"></span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li><div class="dropdown-item text-center text-muted py-4">No notifications</div></li>
+                        {% endfor %}
+                        
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-center small text-primary fw-bold py-2" href="{% url 'all_notifications' %}">View All Notifications</a></li>
+                    </ul>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                            {{ request.user.username|first|upper }}
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userDropdown">
+                        <li><h6 class="dropdown-header">Signed in as <strong>{{ request.user.username }}</strong></h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'my_account' %}"><i class="fa-regular fa-user me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fa-solid fa-gear me-2"></i>Django Admin</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
-        <div class="card-body p-4 position-relative">
-          <div class="position-absolute top-0 end-0 p-3 opacity-10">
-            <i class="fa-solid fa-layer-group fa-4x text-warning"></i>
-          </div>
-          <h6 class="text-muted text-uppercase small fw-bold mb-2">Categories</h6>
-          <h2 class="display-5 fw-bold mb-0">{{ total_categories }}</h2>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border-0 shadow-sm h-100 bg-white rounded-4 overflow-hidden">
-        <div class="card-body p-4 position-relative">
-          <div class="position-absolute top-0 end-0 p-3 opacity-10">
-            <i class="fa-solid fa-people-group fa-4x text-info"></i>
-          </div>
-          <h6 class="text-muted text-uppercase small fw-bold mb-2">Sellers / Buyers</h6>
-          <h2 class="display-5 fw-bold mb-0">{{ sellers }} <span class="fs-4 text-muted">/</span> {{ buyers }}</h2>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="row g-4">
-    <!-- Top Categories + Analytics Placeholder -->
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 border-0">
-            <h5 class="mb-0 fw-bold">Top Categories</h5>
+    <!-- Content Wrapper -->
+    <div class="p-4">
+        <!-- Weather/Date Widget -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card weather-card border-0">
+                    <div class="card-body d-flex justify-content-between align-items-center p-4">
+                        <div class="text-white">
+                            <h3 class="mb-1 fw-bold text-white">Overview Statistics</h3>
+                            <p class="mb-0 opacity-75 text-white">Here's what's happening with your platform today.</p>
+                        </div>
+                        <div class="text-end text-white">
+                            <h4 class="mb-0 fw-bold text-white">{% now "l, d M Y" %}</h4>
+                            <p class="mb-0 opacity-75 text-white">{% now "H:i A" %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body pt-0">
-          <ul class="list-group list-group-flush mb-4">
-            {% for cat in top_categories %}
-              <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0 py-2">
-                <span class="fw-medium"><i class="fa-solid fa-tag text-primary opacity-50 me-2"></i>{{ cat.name }}</span>
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ cat.item_count }} items</span>
-              </li>
-            {% empty %}
-              <li class="list-group-item text-muted px-0">No categories yet.</li>
-            {% endfor %}
-          </ul>
-          <div class="border rounded-4 p-3 bg-light" style="height: 280px;">
-            <canvas id="topCategoriesChart"
-              data-labels='[{% for cat in top_categories %}"{{ cat.name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}]'
-              data-values='[{% for cat in top_categories %}{{ cat.item_count }}{% if not forloop.last %}, {% endif %}{% endfor %}]'
-              style="width: 100%; height: 240px;"></canvas>
-          </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-muted mb-1">Total Users</p>
+                                <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
+                                <i class="fa-solid fa-users fa-lg"></i>
+                            </div>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            <i class="fa-solid fa-arrow-up me-1"></i>Active
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-muted mb-1">Total Items</p>
+                                <h3 class="fw-bold mb-0">{{ total_items }}</h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 text-success rounded p-2">
+                                <i class="fa-solid fa-box fa-lg"></i>
+                            </div>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            <i class="fa-solid fa-check me-1"></i>Listed
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-muted mb-1">Categories</p>
+                                <h3 class="fw-bold mb-0">{{ total_categories }}</h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 text-warning rounded p-2">
+                                <i class="fa-solid fa-layer-group fa-lg"></i>
+                            </div>
+                        </div>
+                        <span class="badge bg-info bg-opacity-10 text-info">
+                            <i class="fa-solid fa-tags me-1"></i>Types
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-muted mb-1">Community</p>
+                                <h3 class="fw-bold mb-0">{{ sellers }} <span class="fs-6 text-muted">/ {{ buyers }}</span></h3>
+                            </div>
+                            <div class="bg-info bg-opacity-10 text-info rounded p-2">
+                                <i class="fa-solid fa-people-group fa-lg"></i>
+                            </div>
+                        </div>
+                        <span class="text-muted small">Sellers / Buyers</span>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Most Bought -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4">Most Bought Items</h5>
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    {% for item in most_bought_items %}
+                                    <tr>
+                                        <td class="ps-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-light rounded p-2 me-3 fw-bold text-muted">{{ forloop.counter }}</div>
+                                                <span class="fw-medium">{{ item.item__title }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end pe-0">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">{{ item.total_sold }} sold</span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="2" class="text-center text-muted">No sales data yet.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Distribution -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4">Price Distribution</h5>
+                        <div class="d-flex flex-column gap-4">
+                            {% for range, count in price_ranges.items %}
+                            <div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">{{ range }}</span>
+                                    <span class="fw-bold">{{ count }}</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    {% widthratio count 1 10 as width_pct %}
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ width_pct }}%;" aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="10"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locations -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4">Top Locations</h5>
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    {% for loc in location_stats %}
+                                    <tr>
+                                        <td class="ps-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-danger bg-opacity-10 text-danger rounded p-2 me-3">
+                                                    <i class="fa-solid fa-location-dot"></i>
+                                                </div>
+                                                <span class="fw-medium">{{ loc.county|default:"Unknown" }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end pe-0">
+                                            <span class="fw-bold">{{ loc.user_count }}</span> <span class="text-muted small">users</span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="2" class="text-center text-muted">No location data yet.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Recent Activity Logs</h5>
+                    <a href="{% url 'admin:marketplace_activitylog_changelist' %}" class="btn btn-primary btn-sm rounded-pill px-3">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="ps-0 text-muted text-uppercase small">User</th>
+                                <th class="text-muted text-uppercase small">Action</th>
+                                <th class="text-muted text-uppercase small">Description</th>
+                                <th class="text-muted text-uppercase small">IP Address</th>
+                                <th class="text-end pe-0 text-muted text-uppercase small">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td class="ps-0 fw-medium">{{ log.user.username }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ log.action }}</span></td>
+                                <td class="text-muted">{{ log.description }}</td>
+                                <td class="text-muted font-monospace small">{{ log.ip_address }}</td>
+                                <td class="text-end pe-0 text-muted">{{ log.timestamp|date:"M d, H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-4 text-muted">No activity logs found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Items -->
+        <div class="card mt-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">
+                        {% if request.GET.q %}
+                            Search Results: Items
+                        {% else %}
+                            Recently Listed Items
+                        {% endif %}
+                    </h5>
+                    <a href="{% url 'admin:marketplace_wasteitem_changelist' %}" class="btn btn-primary btn-sm rounded-pill px-3">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-0 text-muted text-uppercase small">Item</th>
+                                <th class="text-muted text-uppercase small">Category</th>
+                                <th class="text-muted text-uppercase small">Price</th>
+                                <th class="text-muted text-uppercase small">Seller</th>
+                                <th class="text-end pe-0 text-muted text-uppercase small">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_items %}
+                            <tr>
+                                <td class="ps-0 fw-medium">
+                                    <div class="d-flex align-items-center">
+                                        {% if item.image %}
+                                            <img src="{{ item.image.url }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fa-solid fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        {{ item.title }}
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info bg-opacity-10 text-info border-0">{{ item.category.name }}</span></td>
+                                <td class="fw-bold">KSh {{ item.price|floatformat:0 }}</td>
+                                <td>{{ item.seller.user.username }}</td>
+                                <td class="text-end pe-0 text-muted">{{ item.created_at|date:"M d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-4 text-muted">No items found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Recent Items Image Gallery -->
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">Recent Items</h5>
-            <span class="badge bg-light text-dark rounded-pill">Latest {{ recent_items|length }}</span>
+    <!-- Custom Footer -->
+    <footer class="footer mt-auto py-3 bg-white border-top">
+        <div class="container-fluid text-center">
+            <span class="text-muted small">&copy; {% now "Y" %} ReSource Loop Admin Panel. All rights reserved.</span>
         </div>
-        <div class="card-body pt-0">
-          <div class="row g-3">
-            {% for item in recent_items %}
-              <div class="col-6 col-md-4">
-                <a href="{% url 'item_detail' item.slug %}" class="text-decoration-none card-hover-effect d-block">
-                  <div class="position-relative rounded-4 overflow-hidden shadow-sm" style="height: 120px;">
-                    {% if item.image %}
-                      <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-100 h-100 object-fit-cover transition-transform">
-                    {% else %}
-                      <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center flex-column">
-                        <i class="fa-solid fa-image text-muted mb-1"></i>
-                        <span class="text-muted small" style="font-size: 0.7rem;">No image</span>
-                      </div>
-                    {% endif %}
-                    <span class="badge bg-white bg-opacity-90 text-dark position-absolute shadow-sm" style="top:8px; left:8px; font-size: 0.7rem;">{{ item.category.name|default:"Uncategorized" }}</span>
-                  </div>
-                  <div class="mt-2">
-                    <div class="small text-dark fw-bold text-truncate">{{ item.title }}</div>
-                    <div class="text-primary small fw-bold">KSh {{ item.price|floatformat:0 }}</div>
-                  </div>
-                </a>
-              </div>
-            {% empty %}
-              <div class="col-12 text-center py-5">
-                  <i class="fas fa-box-open fa-3x text-muted mb-3 opacity-50"></i>
-                  <p class="text-muted">No recent items found.</p>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </footer>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-  (function() {
-    const ctx = document.getElementById('topCategoriesChart');
-    if (!ctx) return;
-    const labels = JSON.parse(ctx.getAttribute('data-labels') || '[]');
-    const data = JSON.parse(ctx.getAttribute('data-values') || '[]');
-    
-    // Custom Chart.js defaults for better look
-    Chart.defaults.font.family = "'Inter', sans-serif";
-    Chart.defaults.color = '#6c757d';
-    
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Items per Category',
-          data: data,
-          backgroundColor: 'rgba(13, 110, 253, 0.8)',
-          hoverBackgroundColor: '#0d6efd',
-          borderRadius: 8,
-          borderSkipped: false,
-          barThickness: 20,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: '#fff',
-                titleColor: '#000',
-                bodyColor: '#666',
-                borderColor: '#e9ecef',
-                borderWidth: 1,
-                padding: 10,
-                displayColors: false,
-                callbacks: {
-                    label: function(context) {
-                        return context.parsed.y + ' Items';
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: '#f8f9fa',
-                    drawBorder: false,
-                },
-                ticks: {
-                    precision: 0,
-                    padding: 10
-                }
-            },
-            x: {
-                grid: {
-                    display: false,
-                    drawBorder: false,
-                },
-                ticks: {
-                    padding: 10
-                }
-            }
-        }
-      }
-    });
-  })();
-</script>
 {% endblock %}
+
+{% block footer %}{% endblock %}

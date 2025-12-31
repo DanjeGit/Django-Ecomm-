@@ -57,22 +57,66 @@
           <div class="mt-4">
             <div id="paymentStatus" class="alert d-none rounded-3" role="alert"></div>
             
+            {% if request.user.buyerprofile.pickup_station %}
+            <div class="alert alert-info mb-3">
+                <i class="fa-solid fa-location-dot me-2"></i>
+                <strong>Pickup Station:</strong> {{ request.user.buyerprofile.pickup_station.name }}<br>
+                <small>{{ request.user.buyerprofile.pickup_station.address }}</small>
+            </div>
+            {% endif %}
+
             <div class="bg-light p-4 rounded-4 mb-3">
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-mobile-screen-button me-2"></i>M-Pesa Payment</h6>
-                <form id="stkForm" method="post" action="{% url 'mpesa_stk_push' %}">
-                  {% csrf_token %}
-                  <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
-                    <input type="tel" name="phone_number" class="form-control form-control-lg border-0 bg-white" placeholder="e.g. 07XXXXXXXX" value="{{ request.user.buyerprofile.phone_number|default:'' }}" required>
+                <h6 class="fw-bold mb-3">Select Payment Method</h6>
+                
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill" id="pills-mpesa-tab" data-bs-toggle="pill" data-bs-target="#pills-mpesa" type="button" role="tab" aria-selected="true">M-Pesa</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill" id="pills-airtel-tab" data-bs-toggle="pill" data-bs-target="#pills-airtel" type="button" role="tab" aria-selected="false">Airtel Money</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill" id="pills-card-tab" data-bs-toggle="pill" data-bs-target="#pills-card" type="button" role="tab" aria-selected="false">Card</button>
+                  </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContent">
+                  <!-- M-Pesa -->
+                  <div class="tab-pane fade show active" id="pills-mpesa" role="tabpanel">
+                    <form id="stkForm" method="post" action="{% url 'mpesa_stk_push' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="payment_method" value="mpesa">
+                      <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">M-Pesa Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control form-control-lg border-0 bg-white" placeholder="e.g. 07XXXXXXXX" value="{{ request.user.buyerprofile.phone_number|default:'' }}" required>
+                      </div>
+                      <input type="hidden" name="amount" value="{{ total }}">
+                      <button id="stkSubmit" type="submit" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm">
+                        Pay with M-Pesa
+                      </button>
+                    </form>
+                    <small class="text-muted d-block mt-3 text-center" style="font-size: 0.8rem;">
+                        <i class="fa-solid fa-circle-info me-1"></i> You will receive an M-Pesa prompt on your phone.
+                    </small>
                   </div>
-                  <input type="hidden" name="amount" value="{{ total }}">
-                  <button id="stkSubmit" type="submit" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm">
-                    Place Order
-                  </button>
-                </form>
-                <small class="text-muted d-block mt-3 text-center" style="font-size: 0.8rem;">
-                    <i class="fa-solid fa-circle-info me-1"></i> You will receive an M-Pesa prompt on your phone. Enter your PIN to complete payment.
-                </small>
+
+                  <!-- Airtel Money -->
+                  <div class="tab-pane fade" id="pills-airtel" role="tabpanel">
+                     <div class="text-center py-3">
+                        <i class="fa-solid fa-mobile-screen fa-2x text-danger mb-2"></i>
+                        <p class="text-muted">Airtel Money integration coming soon.</p>
+                     </div>
+                  </div>
+
+                  <!-- Card -->
+                  <div class="tab-pane fade" id="pills-card" role="tabpanel">
+                    <div class="text-center py-3">
+                        <i class="fa-regular fa-credit-card fa-2x text-primary mb-2"></i>
+                        <p class="text-muted">Card payments are currently unavailable.</p>
+                    </div>
+                  </div>
+                </div>
+
             </div>
           </div>
         </div>

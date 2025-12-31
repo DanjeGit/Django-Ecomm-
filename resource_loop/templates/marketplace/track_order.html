@@ -12,7 +12,7 @@
                 <div class="card-body p-4">
                     <form method="GET" action="{% url 'track_order' %}" class="mb-4">
                         <div class="input-group input-group-lg">
-                            <input type="text" name="q" class="form-control" placeholder="Enter Order UUID, ID, or M-Pesa Receipt No." value="{{ query }}" required>
+                            <input type="text" name="q" class="form-control" placeholder="Enter Order UUID or M-Pesa Receipt No." value="{{ query }}" required>
                             <button class="btn btn-dark" type="submit">Track</button>
                         </div>
                         <small class="text-muted">e.g. QKH1234567 or 550e8400-e29b...</small>

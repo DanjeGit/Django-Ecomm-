@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const locationsData = {{ kenya_locations_json|safe }};
     const countySelect = document.getElementById('id_county');
     const subCountySelect = document.getElementById('id_sub_county');
+    const pickupSelect = document.getElementById('id_pickup_station');
 
     if (countySelect && subCountySelect) {
         countySelect.addEventListener('change', function() {
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Clear existing options
             subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+            if (pickupSelect) pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
             
             if (selectedCounty && locationsData[selectedCounty]) {
                 const subCounties = locationsData[selectedCounty];
@@ -52,6 +54,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+
+        if (pickupSelect) {
+            subCountySelect.addEventListener('change', function() {
+                const selectedSubCounty = this.value;
+                
+                // Clear existing options
+                pickupSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                fetch(`/api/pickup-stations/?sub_county=${encodeURIComponent(selectedSubCounty)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
+                        data.forEach(station => {
+                            const option = document.createElement('option');
+                            option.value = station.id;
+                            option.textContent = station.name + ' - ' + station.address;
+                            pickupSelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error fetching pickup stations:', err);
+                        pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
+                    });
+            });
+        }
     }
 });
 </script>

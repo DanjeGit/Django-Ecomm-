@@ -11,11 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    {% block extra_css %}{% endblock %}
     <style>
         /* Removed inline styles to use base.css */
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
+    {% block header %}
     <header>
         <nav class="navbar navbar-expand-lg navbar-glass sticky-top py-3">
             <div class="container">
@@ -105,6 +107,7 @@
             </div>
         </nav>
     </header>
+    {% endblock %}
     <main class="flex-grow-1">
         {% if messages %}
             <div class="container mt-3">
@@ -120,6 +123,7 @@
         {% endblock %}
     </main>
 
+    {% block footer %}
     <footer class="footer mt-4 py-5 bg-dark text-white">
         <div class="container">
             <div class="row">
@@ -172,6 +176,7 @@
             </div>
         </div>
     </footer>
+    {% endblock %}
     <button id="backToTop" class="btn btn-primary rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4" style="display: none; z-index: 1000; width: 50px; height: 50px;">
         <i class="fas fa-arrow-up"></i>
     </button>

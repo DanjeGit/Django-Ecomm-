@@ -1,5 +1,30 @@
 from django.contrib import admin
-from .models import Category, WasteItem, SellerProfile, BuyerProfile, Transaction, Order, OrderItem
+from .models import Category, WasteItem, SellerProfile, BuyerProfile, Transaction, Order, OrderItem, ShippingConfiguration, PickupStation, ActivityLog
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'action', 'ip_address', 'timestamp')
+    list_filter = ('action', 'timestamp')
+    search_fields = ('user__username', 'description', 'ip_address')
+    readonly_fields = ('user', 'action', 'description', 'ip_address', 'timestamp')
+
+    def has_add_permission(self, request):
+        return False
+
+@admin.register(PickupStation)
+class PickupStationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'county', 'sub_county')
+    list_filter = ('county', 'sub_county')
+    search_fields = ('name', 'county', 'sub_county')
+
+@admin.register(ShippingConfiguration)
+class ShippingConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('same_county_fee', 'different_county_fee', 'standard_fee')
+    # Prevent adding more than one configuration
+    def has_add_permission(self, request):
+        if self.model.objects.exists():
+            return False
+        return super().has_add_permission(request)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const locationsData = {{ kenya_locations_json|safe }};
     const countySelect = document.getElementById('id_county');
     const subCountySelect = document.getElementById('id_sub_county');
+    const pickupSelect = document.getElementById('id_pickup_station');
 
     if (countySelect && subCountySelect) {
         countySelect.addEventListener('change', function() {
@@ -137,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Clear existing options
             subCountySelect.innerHTML = '<option value="">Select Sub-County</option>';
+            if (pickupSelect) pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
             
             if (selectedCounty && locationsData[selectedCounty]) {
                 const subCounties = locationsData[selectedCounty];
@@ -148,6 +150,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+        
+        // Dynamic Pickup Stations based on Sub-County
+        if (pickupSelect) {
+            subCountySelect.addEventListener('change', function() {
+                const selectedSubCounty = this.value;
+                
+                // Clear existing options
+                pickupSelect.innerHTML = '<option value="">Loading...</option>';
+                
+                // Fetch pickup stations via API (or simple reload for now since we don't have an API endpoint for this yet)
+                // For now, we will just reload the page with the selected sub-county as a query param OR 
+                // simpler: we can't easily do AJAX without an endpoint. 
+                // Let's use a simple trick: The form will submit and if validation fails it repopulates.
+                // BUT for better UX, let's add a simple API endpoint or just leave it to server-side rendering on error.
+                // Actually, the user asked to "populate a pickup station based on the subcounty".
+                // Since I didn't create an API endpoint, I will rely on the server-side form logic I added in forms.py
+                // which filters the queryset based on bound data.
+                // To make it dynamic without reload, I would need an API.
+                // Given "don't change current functionality" constraint, adding a full API might be too much.
+                // However, I can just show a message or let the user know they need to select sub-county first.
+                // The form in forms.py handles the filtering if the form is submitted.
+                // To make it work live, I'll add a small helper view.
+                
+                fetch(`/api/pickup-stations/?sub_county=${encodeURIComponent(selectedSubCounty)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
+                        data.forEach(station => {
+                            const option = document.createElement('option');
+                            option.value = station.id;
+                            option.textContent = station.name + ' - ' + station.address;
+                            pickupSelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error fetching pickup stations:', err);
+                        pickupSelect.innerHTML = '<option value="">Select Pickup Station (Optional)</option>';
+                    });
+            });
+        }
     }
 });
 </script>

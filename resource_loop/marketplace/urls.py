@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from . import api_views
+from . import api_utils
 
 router = DefaultRouter()
 router.register(r'items', api_views.MarketplaceViewSet)
@@ -17,6 +18,8 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/user/', views.user_dashboard, name='user_dashboard'),
     path('dashboard/admin/', views.admin_dashboard, name='admin_dashboard'),
+    path('notifications/', views.all_notifications, name='all_notifications'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
     path('dashboard/seller/', views.seller_dashboard, name='seller_dashboard'),
     path('add-listing/', views.add_listing, name='add_listing'),
     path('cart/', views.cart_view, name='cart'),
@@ -39,6 +42,7 @@ urlpatterns = [
     path('signup/seller/', views.seller_signup_view, name='seller_signup'),
     path('seller/<int:seller_id>/', views.seller_profile_public, name='seller_profile_public'),
     path('verify-email/', views.verify_email_view, name='verify_email'),
+    path('api/pickup-stations/', api_utils.get_pickup_stations, name='api_pickup_stations'),
     # Footer Pages
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),

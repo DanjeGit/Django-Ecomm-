@@ -26,6 +26,8 @@ class UserForm(forms.ModelForm):
             raise ValidationError("An account with this email already exists.")
         return email
 
+from .models import BuyerProfile, SellerProfile, PickupStation
+
 class BuyerProfileForm(forms.ModelForm):
     phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0712345678', 'maxlength': '10'}))
     
@@ -42,12 +44,29 @@ class BuyerProfileForm(forms.ModelForm):
         required=True
     )
 
+    pickup_station = forms.ModelChoiceField(
+        queryset=PickupStation.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_pickup_station'}),
+        empty_label="Select Pickup Station (Optional)"
+    )
+
     class Meta:
         model = BuyerProfile
-        fields = ('phone_number', 'county', 'sub_county')
+        fields = ('phone_number', 'county', 'sub_county', 'pickup_station')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Populate pickup stations if sub_county is selected
+        if 'sub_county' in self.data:
+            try:
+                sub_county = self.data.get('sub_county')
+                self.fields['pickup_station'].queryset = PickupStation.objects.filter(sub_county=sub_county)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.sub_county:
+            self.fields['pickup_station'].queryset = PickupStation.objects.filter(sub_county=self.instance.sub_county)
         # If we have bound data (POST), populate sub_county choices so validation passes
         if 'county' in self.data:
             try:

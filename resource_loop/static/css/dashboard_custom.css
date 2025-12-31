@@ -1,0 +1,180 @@
+/* Dashboard Layout */
+:root {
+    --sidebar-width: 260px;
+    --topbar-height: 70px;
+    --primary-color: #4B49AC;
+    --secondary-color: #98BDFF;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #6C7383;
+    --sidebar-active: #4B49AC;
+    --sidebar-hover: #f8f9fa;
+}
+
+body {
+    background-color: #F5F7FF;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--sidebar-bg);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+.sidebar-brand {
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.sidebar-menu {
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+    height: calc(100vh - var(--topbar-height));
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.5rem;
+    color: var(--sidebar-text);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(75, 73, 172, 0.2);
+}
+
+.nav-link i {
+    width: 24px;
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+/* Main Content */
+.main-panel {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+/* Topbar */
+.topbar {
+    height: var(--topbar-height);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.search-bar {
+    width: 400px;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border: 1px solid #f3f3f3;
+    border-radius: 20px;
+    background: #f3f3f3;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    background: #fff;
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    color: #000;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Weather/Date Widget */
+.weather-card {
+    background: linear-gradient(45deg, #4B49AC, #98BDFF);
+    color: #fff;
+}
+
+/* Tables */
+.table thead th {
+    border-bottom: none;
+    color: #6C7383;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.table td {
+    vertical-align: middle;
+    color: #333;
+    font-weight: 500;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .main-panel {
+        margin-left: 0;
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+}

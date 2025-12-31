@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    body { background-color: #F5F7FF; }
+    .notification-card { transition: all 0.2s ease; border-left: 4px solid transparent; }
+    .notification-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.05)!important; }
+    .notification-card.unread { border-left-color: #0d6efd; background-color: #fff; }
+    .notification-card.read { border-left-color: #dee2e6; background-color: #f8f9fa; opacity: 0.8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Notifications</h2>
+                    <p class="text-muted mb-0">Stay updated with your latest activities.</p>
+                </div>
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    {% if notifications %}
+                        <div class="list-group list-group-flush">
+                            {% for notification in notifications %}
+                            <a href="{% url 'mark_notification_read' notification.id %}" class="list-group-item list-group-item-action p-4 notification-card {% if notification.is_read %}read{% else %}unread{% endif %}">
+                                <div class="d-flex w-100 justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            {% if 'order' in notification.title|lower %}
+                                                <i class="fa-solid fa-box"></i>
+                                            {% elif 'payment' in notification.title|lower %}
+                                                <i class="fa-solid fa-credit-card"></i>
+                                            {% elif 'welcome' in notification.title|lower %}
+                                                <i class="fa-solid fa-hand-sparkles"></i>
+                                            {% else %}
+                                                <i class="fa-solid fa-bell"></i>
+                                            {% endif %}
+                                        </div>
+                                        <h5 class="mb-0 fw-bold {% if not notification.is_read %}text-primary{% else %}text-dark{% endif %}">{{ notification.title }}</h5>
+                                    </div>
+                                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1 text-muted ms-5 ps-2">{{ notification.message }}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fa-regular fa-bell-slash fa-2x text-muted"></i>
+                            </div>
+                            <h5 class="fw-bold text-muted">No notifications yet</h5>
+                            <p class="text-muted small">We'll notify you when something important happens.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

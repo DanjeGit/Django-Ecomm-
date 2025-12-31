@@ -1,21 +1,20 @@
-from requests import request
-from .forms import UserForm, BuyerProfileForm, SellerProfileForm, SellerProfileForm
-from django.contrib.auth.forms import AuthenticationForm
+import logging
+from .forms import UserForm, BuyerProfileForm, SellerProfileForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .models import WasteItem, Category, Cart, CartItem, BuyerProfile, SellerProfile
-from .models import Transaction, Order, OrderItem
+from django.urls import reverse
+from .models import WasteItem, Category, Cart, CartItem, BuyerProfile, SellerProfile, ShippingConfiguration
+from .models import Transaction, Order, OrderItem, OTP, ActivityLog, Notification
+from django.db import models
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import login
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.db.models import Count
 from django.conf import settings
 from django.core.mail import send_mail
 from mpesa.utils import stk_push
@@ -23,28 +22,28 @@ import json
 import random
 import time
 import uuid
-from .models import OTP
 from .locations import KENYA_LOCATIONS
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+logger = logging.getLogger(__name__)
+
 def calculate_shipping_fee(seller_county, buyer_county):
     """
-    Calculate shipping fee based on location.
-    Same county: KSh 200
-    Different county: KSh 500
-    Unknown: KSh 300
+    Calculate shipping fee based on location using dynamic configuration.
     """
+    config = ShippingConfiguration.get_solo()
+    
     if not seller_county or not buyer_county:
-        return 300
+        return float(config.standard_fee)
     
     if seller_county.lower().strip() == buyer_county.lower().strip():
-        return 200
+        return float(config.same_county_fee)
     else:
-        return 500
+        return float(config.different_county_fee)
 
 def send_otp_email(user, otp):
-    print(f"📧 Preparing to send OTP {otp} to {user.email}...")
+    logger.info(f"📧 Preparing to send OTP {otp} to {user.email}...")
     # Import here to avoid circular import or startup errors
     try:
         from .tasks import send_email_task
@@ -94,6 +93,13 @@ def verify_email_view(request):
                     messages.success(request, f"Welcome back, {user.username}!")
                 else:
                     messages.success(request, f"Email verified! Welcome, {user.username}!")
+                    # Create Welcome Notification
+                    Notification.objects.create(
+                        user=user,
+                        title="Welcome to Resource Loop!",
+                        message="Thank you for joining our community. Start exploring items or list your own waste.",
+                        link=reverse('user_dashboard')
+                    )
                 
                 if user.is_superuser:
                     return redirect('/admin/')
@@ -252,6 +258,13 @@ def user_dashboard(request):
 
 @login_required
 def admin_dashboard(request):
+    # Search functionality
+    query = request.GET.get('q')
+    
+    # Notifications
+    unread_notifications_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    recent_notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:5]
+
     # Admin overview metrics
     total_users = User.objects.count()
     total_items = WasteItem.objects.count()
@@ -263,7 +276,41 @@ def admin_dashboard(request):
         Category.objects.annotate(item_count=Count('items'))
         .order_by('-item_count')[:5]
     )
-    recent_items = WasteItem.objects.order_by('-created_at')[:8]
+    
+    # Filter recent items if search query exists
+    if query:
+        recent_items = WasteItem.objects.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query)
+        ).order_by('-created_at')[:8]
+    else:
+        recent_items = WasteItem.objects.order_by('-created_at')[:8]
+
+    # --- New Analytics ---
+    
+    # 1. Most Bought Products
+    most_bought_items = (
+        OrderItem.objects.values('item__title')
+        .annotate(total_sold=models.Sum('quantity'))
+        .order_by('-total_sold')[:5]
+    )
+
+    # 2. Price Range Distribution
+    price_ranges = {
+        'Low (< 500)': OrderItem.objects.filter(price__lt=500).count(),
+        'Medium (500 - 2000)': OrderItem.objects.filter(price__gte=500, price__lte=2000).count(),
+        'High (> 2000)': OrderItem.objects.filter(price__gt=2000).count(),
+    }
+
+    # 3. Location Stats (Based on Buyer Profile County)
+    location_stats = (
+        BuyerProfile.objects.values('county')
+        .annotate(user_count=Count('id'))
+        .order_by('-user_count')[:5]
+    )
+
+    # 4. Recent Activity Logs
+    recent_logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:10]
 
     context = {
         'total_users': total_users,
@@ -273,8 +320,29 @@ def admin_dashboard(request):
         'buyers': buyers,
         'top_categories': top_categories,
         'recent_items': recent_items,
+        'most_bought_items': most_bought_items,
+        'price_ranges': price_ranges,
+        'location_stats': location_stats,
+        'recent_logs': recent_logs,
+        'unread_notifications_count': unread_notifications_count,
+        'recent_notifications': recent_notifications,
     }
     return render(request, 'marketplace/dashboard_admin.html', context)
+
+@login_required
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    
+    if notification.link:
+        return redirect(notification.link)
+    return redirect('admin_dashboard')
+
+@login_required
+def all_notifications(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'marketplace/notifications.html', {'notifications': notifications})
 
 def seller_profile_public(request, seller_id):
     seller = get_object_or_404(SellerProfile, id=seller_id)
@@ -440,7 +508,18 @@ def order_list(request):
 
 @login_required
 def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    # Check if order exists globally first
+    order = Order.objects.filter(id=order_id).first()
+    
+    if not order:
+        messages.error(request, f"Order #{order_id} not found.")
+        return redirect('admin_dashboard' if request.user.is_superuser else 'user_dashboard')
+
+    # Access control
+    if not request.user.is_superuser and order.user != request.user:
+        messages.error(request, "You do not have permission to view this order.")
+        return redirect('user_dashboard')
+
     return render(request, 'marketplace/order_detail.html', {'order': order})
 
 @login_required
@@ -506,7 +585,7 @@ def signup_view(request):
                 messages.info(request, f"Account exists but unverified. New code sent to {existing_user.email}")
                 return redirect('verify_email')
             except Exception as e:
-                print(f"Error sending OTP: {e}")
+                logger.error(f"Error sending OTP: {e}")
                 return redirect('verify_email')
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -538,7 +617,7 @@ def signup_view(request):
                 return redirect('verify_email')
             except Exception as e:
                 # Log error but don't crash, user can request resend
-                print(f"Error sending OTP: {e}")
+                logger.error(f"Error sending OTP: {e}")
                 return redirect('verify_email')
         else:
             messages.error(request, "There was an error with your signup. Please check the details you provided.")
@@ -575,7 +654,7 @@ def login_view(request):
                 messages.info(request, f"Verification code sent to {user.email}")
                 return redirect('verify_email')
             except Exception as e:
-                print(f"Error sending OTP: {e}")
+                logger.error(f"Error sending OTP: {e}")
                 messages.error(request, "Error sending verification code.")
                 return redirect('signup')
         else:
@@ -649,14 +728,31 @@ def initiate_payment(request):
             profile_phone = None
         phone = form_phone or profile_phone
 
-        # 2. Get the amount: prefer server-side cart total to avoid tampering
-        amount = request.POST.get("amount")
+        # 2. Get the amount: prefer server-side calculation to avoid tampering
         try:
             cart = Cart.objects.get(user=request.user)
-            cart_total = cart.get_total_price()
-            # If no amount provided or mismatch, use cart total
-            if not amount or float(amount) != float(cart_total):
-                amount = cart_total
+            
+            # Calculate Shipping Fee (Server-side)
+            shipping_fee = 0
+            buyer_county = None
+            if hasattr(request.user, 'buyerprofile'):
+                buyer_county = request.user.buyerprofile.county
+            
+            processed_sellers = set()
+            cart_items = cart.items.select_related('item', 'item__seller').all()
+
+            for cart_item in cart_items:
+                seller = cart_item.item.seller
+                if seller.id not in processed_sellers:
+                    fee = calculate_shipping_fee(seller.county, buyer_county)
+                    shipping_fee += fee
+                    processed_sellers.add(seller.id)
+            
+            subtotal = cart.get_total_price()
+            grand_total = float(subtotal) + shipping_fee
+            
+            amount = grand_total
+            
         except Cart.DoesNotExist:
             return JsonResponse({"error": "Cart is empty"}, status=400)
 
@@ -679,8 +775,14 @@ def initiate_payment(request):
         result = stk_push(amount, phone)
 
         # Create a single Order and OrderItems snapshot to avoid duplicates
-        cart_items = cart.items.select_related('item').all()
-        order = Order.objects.create(user=request.user, total_amount=cart.get_total_price(), status='payment_pending')
+        # Use the calculated grand_total
+        order = Order.objects.create(user=request.user, total_amount=grand_total, status='payment_pending')
+        
+        # Assign Pickup Station from Profile if available
+        if hasattr(request.user, 'buyerprofile') and request.user.buyerprofile.pickup_station:
+            order.pickup_station = request.user.buyerprofile.pickup_station
+            order.save(update_fields=['pickup_station'])
+
         for ci in cart_items:
             OrderItem.objects.create(order=order, item=ci.item, quantity=ci.quantity, price=ci.item.price)
 
@@ -772,14 +874,14 @@ def send_seller_notifications(order):
             seller.user.id,
             "New Order Received",
             f"You have a new order #{order.id} worth KES {total_value}",
-            link=f"/orders/{order.id}/"
+            link=reverse('order_detail', args=[order.id])
         )
         
         # 3. Send SMS (Simulation)
         phone = seller.payment_number
         if phone:
-            print(f"📱 [SMS SIMULATION] To: {phone}")
-            print(f"   Message: You have a new order! Check your dashboard. Items: {len(items)}")
+            logger.info(f"📱 [SMS SIMULATION] To: {phone}")
+            logger.info(f"   Message: You have a new order! Check your dashboard. Items: {len(items)}")
 
 
 def send_buyer_order_confirmation(order):
@@ -819,13 +921,13 @@ def send_buyer_order_confirmation(order):
     except ImportError:
         pass
 
-    # Async Notification
+    # Create In-App Notification
     from .tasks import create_notification_task
     create_notification_task.delay(
         order.user.id,
         "Order Confirmed",
-        f"Your order #{order.id} has been confirmed.",
-        link=f"/orders/{order.id}/"
+        f"Your order #{order.id} has been confirmed. Total: KES {order.total_amount}",
+        link=reverse('order_detail', args=[order.id])
     )
 
 @csrf_exempt
@@ -835,7 +937,7 @@ def mpesa_callback(request):
         try:
             callback_data = json.loads(request.body)
             
-            print("========== M-PESA CALLBACK RECEIVED (Queuing Task) ==========")
+            logger.info("========== M-PESA CALLBACK RECEIVED (Queuing Task) ==========")
             
             # Offload processing to Celery Task (Redis)
             from .tasks import process_mpesa_callback_task
@@ -921,7 +1023,7 @@ def seller_signup_view(request):
                 messages.info(request, f"Verification code sent to {user.email}")
                 return redirect('verify_email')
             except Exception as e:
-                print(f"Error sending OTP: {e}")
+                logger.error(f"Error sending OTP: {e}")
                 return redirect('verify_email')
         else:
             messages.error(request, "Please correct the errors below.")
@@ -939,32 +1041,36 @@ def seller_signup_view(request):
     }
     return render(request, 'registration/seller_signup.html', context)
 
+@login_required
 def track_order(request):
     order = None
     error = None
     query = request.GET.get('q', '').strip()
     
     if query:
+        # Scope search strictly to the logged-in user's orders
         # 1. Try searching by Order UUID
         try:
-            # Check if it looks like a UUID
             uuid_obj = uuid.UUID(query)
-            order = Order.objects.filter(order_uuid=uuid_obj).first()
+            order = Order.objects.filter(order_uuid=uuid_obj, user=request.user).first()
         except ValueError:
             pass
             
         # 2. If not found, try searching by M-Pesa Receipt Number
         if not order:
-            transaction = Transaction.objects.filter(mpesa_receipt_number__iexact=query).first()
+            # Ensure the transaction belongs to the user
+            transaction = Transaction.objects.filter(
+                mpesa_receipt_number__iexact=query, 
+                user=request.user
+            ).first()
             if transaction and transaction.order:
                 order = transaction.order
         
-        # 3. If still not found, try searching by Order ID (if numeric)
-        if not order and query.isdigit():
-             order = Order.objects.filter(id=query).first()
+        # 3. Removed insecure search by Integer ID
+        # Users should use the UUID or Receipt Number, or view their order list.
 
         if not order:
-            error = f"No order found with Tracking ID: {query}"
+            error = f"No order found with Tracking ID: {query} in your account."
 
     return render(request, 'marketplace/track_order.html', {
         'order': order,

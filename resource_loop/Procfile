@@ -1,0 +1,2 @@
+web: gunicorn resource_loop.wsgi --log-file -
+worker: celery -A resource_loop worker -l info

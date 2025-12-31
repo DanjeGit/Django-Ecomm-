@@ -6,6 +6,23 @@ from django.utils import timezone
 import uuid
 import random
 
+class ShippingConfiguration(models.Model):
+    same_county_fee = models.DecimalField(max_digits=10, decimal_places=2, default=200.00, help_text="Fee when buyer and seller are in the same county")
+    different_county_fee = models.DecimalField(max_digits=10, decimal_places=2, default=500.00, help_text="Fee when buyer and seller are in different counties")
+    standard_fee = models.DecimalField(max_digits=10, decimal_places=2, default=300.00, help_text="Default fee when location is unknown")
+
+    class Meta:
+        verbose_name = "Shipping Configuration"
+        verbose_name_plural = "Shipping Configuration"
+
+    def __str__(self):
+        return "Shipping Rates"
+
+    @classmethod
+    def get_solo(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
 class OTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otps')
     code = models.CharField(max_length=6)
@@ -131,12 +148,22 @@ class CartItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.item.title} in cart"
 
+class PickupStation(models.Model):
+    name = models.CharField(max_length=255)
+    county = models.CharField(max_length=100)
+    sub_county = models.CharField(max_length=100)
+    address = models.TextField(help_text="Detailed address or landmarks")
+    
+    def __str__(self):
+        return f"{self.name} - {self.sub_county}, {self.county}"
+
 class BuyerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buyerprofile')
     phone_number = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=100, blank=True)
     county = models.CharField(max_length=100, blank=True, null=True)
     sub_county = models.CharField(max_length=100, blank=True, null=True)
+    pickup_station = models.ForeignKey(PickupStation, on_delete=models.SET_NULL, null=True, blank=True, related_name='buyers')
 
     def __str__(self):
         return f"Profile of {self.user.username}"
@@ -196,9 +223,17 @@ class Order(models.Model):
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ]
+    PAYMENT_METHOD_CHOICES = [
+        ('mpesa', 'M-Pesa'),
+        ('airtel', 'Airtel Money'),
+        ('card', 'Credit/Debit Card'),
+    ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='placed')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='mpesa')
+    pickup_station = models.ForeignKey(PickupStation, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # Public unique identifier for mapping/orders tracking
@@ -235,3 +270,25 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.subject} - {self.email}"
+
+class ActivityLog(models.Model):
+    ACTION_CHOICES = [
+        ('login', 'Login'),
+        ('logout', 'Logout'),
+        ('view', 'View'),
+        ('create', 'Create'),
+        ('update', 'Update'),
+        ('delete', 'Delete'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    description = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.timestamp}"
