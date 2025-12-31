@@ -10,6 +10,7 @@ router.register(r'notifications', api_views.NotificationViewSet, basename='notif
 router.register(r'otp', api_views.OTPViewSet, basename='otp')
 
 urlpatterns = [
+    path('debug-static/', views.debug_static_files, name='debug_static'),
     path('', views.index, name='index'),
     path('api/', include(router.urls)),
     path('search/', views.search_results, name='search'),

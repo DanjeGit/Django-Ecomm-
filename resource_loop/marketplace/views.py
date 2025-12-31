@@ -25,8 +25,33 @@ import uuid
 from .locations import KENYA_LOCATIONS
 from django.template.loader import render_to_string
 from django.utils import timezone
+import os
 
 logger = logging.getLogger(__name__)
+
+def debug_static_files(request):
+    """
+    Debug view to list files in STATIC_ROOT.
+    Only for superusers.
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    static_root = settings.STATIC_ROOT
+    files = []
+    
+    if os.path.exists(static_root):
+        for root, dirs, filenames in os.walk(static_root):
+            for filename in filenames:
+                files.append(os.path.join(root, filename).replace(str(static_root), ''))
+    else:
+        files = ["STATIC_ROOT does not exist"]
+        
+    return JsonResponse({
+        'STATIC_ROOT': str(static_root),
+        'files_count': len(files),
+        'files': files[:100] # Limit to 100
+    })
 
 def calculate_shipping_fee(seller_county, buyer_county):
     """
