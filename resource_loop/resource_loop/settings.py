@@ -136,7 +136,7 @@ LOGOUT_REDIRECT_URL = 'index'
 
 # 7. STATIC & MEDIA FILES (Hybrid Setup with Compatibility)
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -149,13 +149,12 @@ if IS_RENDER:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # ✅ FIX: Use standard Django storage (No compression, No crashing)
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
     
     # Legacy Fallback
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
     # Cloudinary Config (Keep this)
     CLOUDINARY_STORAGE = {
