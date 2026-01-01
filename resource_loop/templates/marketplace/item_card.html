@@ -29,10 +29,15 @@
             <div class="d-flex justify-content-between align-items-end">
                 <div>
                     <div class="fw-bold text-dark" style="font-size: 1.1rem;">KSh {{ item.price|floatformat:0 }}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ item.stock_quantity }} available</div>
+                    {% if item.stock_int > 0 %}
+                        <div class="text-muted" style="font-size: 0.75rem;">{{ item.stock_quantity }} available</div>
+                    {% else %}
+                        <div class="text-danger fw-bold" style="font-size: 0.75rem;">Out of Stock</div>
+                    {% endif %}
                 </div>
                 
                 <!-- Form is outside stretched-link to work properly -->
+                {% if item.stock_int > 0 %}
                 <form action="{% url 'add_to_cart' item.id %}" method="post" style="position: relative; z-index: 2;">
                     {% csrf_token %}
                     <input type="hidden" name="quantity" value="1">
@@ -40,6 +45,11 @@
                         <i class="fa-solid fa-cart-plus me-2"></i> Add
                     </button>
                 </form>
+                {% else %}
+                <button disabled class="btn btn-light btn-sm rounded-pill d-flex align-items-center shadow-sm border px-3 text-muted" style="height: 36px; position: relative; z-index: 2;">
+                    <i class="fa-solid fa-ban me-2"></i> Sold Out
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -13,9 +13,10 @@ class ActivityLogAdmin(admin.ModelAdmin):
 
 @admin.register(PickupStation)
 class PickupStationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'county', 'sub_county')
+    list_display = ('name', 'county', 'sub_county', 'shipping_fee')
     list_filter = ('county', 'sub_county')
     search_fields = ('name', 'county', 'sub_county')
+    list_editable = ('shipping_fee',)
 
 @admin.register(ShippingConfiguration)
 class ShippingConfigurationAdmin(admin.ModelAdmin):

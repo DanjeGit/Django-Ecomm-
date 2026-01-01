@@ -48,19 +48,26 @@
                                     <div class="d-flex align-items-center text-muted small mb-2">
                                         <i class="fa-solid fa-location-dot me-2"></i> {{ item.location|default:"Nairobi, Kenya" }}
                                     </div>
+                                    {% if item.stock_int > 0 %}
                                     <div class="d-flex align-items-center text-muted small">
                                         <i class="fa-solid fa-box me-2"></i> {{ item.stock_quantity }} in stock
                                     </div>
+                                    {% else %}
+                                    <div class="d-flex align-items-center text-danger fw-bold small">
+                                        <i class="fa-solid fa-circle-xmark me-2"></i> Out of Stock
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
 
+                            {% if item.stock_int > 0 %}
                             <form action="{% url 'add_to_cart' item.id %}" method="post" class="mt-4">
                                 {% csrf_token %}
                                 <div class="d-flex align-items-center gap-3 mb-4">
                                     <div class="input-group input-group-lg rounded-pill overflow-hidden border" style="width: 140px;">
                                         <button class="btn btn-light border-0" type="button" onclick="const q=document.getElementById('quantity'); q.value=Math.max(1, parseInt(q.value||'1')-1);"><i class="fa-solid fa-minus small"></i></button>
-                                        <input id="quantity" type="number" name="quantity" value="1" min="1" class="form-control text-center border-0 bg-white">
-                                        <button class="btn btn-light border-0" type="button" onclick="const q=document.getElementById('quantity'); q.value=parseInt(q.value||'1')+1;"><i class="fa-solid fa-plus small"></i></button>
+                                        <input id="quantity" type="number" name="quantity" value="1" min="1" max="{{ item.stock_int }}" class="form-control text-center border-0 bg-white">
+                                        <button class="btn btn-light border-0" type="button" onclick="const q=document.getElementById('quantity'); q.value=Math.min({{ item.stock_int }}, parseInt(q.value||'1')+1);"><i class="fa-solid fa-plus small"></i></button>
                                     </div>
                                     <span class="text-muted small">Quantity</span>
                                 </div>
@@ -68,6 +75,12 @@
                                     <i class="fa-solid fa-cart-plus me-2"></i> Add to Cart
                                 </button>
                             </form>
+                            {% else %}
+                            <div class="mt-4 p-4 bg-light rounded-3 text-center">
+                                <h5 class="text-muted fw-bold mb-2">Currently Unavailable</h5>
+                                <p class="text-muted small mb-0">This item is out of stock. Please check back later.</p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

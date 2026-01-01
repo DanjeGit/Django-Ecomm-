@@ -427,6 +427,11 @@ def add_listing(request):
 def add_to_cart(request, item_id):
     item = get_object_or_404(WasteItem, id=item_id)
     
+    # Check stock
+    if item.stock_int <= 0:
+        messages.error(request, "This item is out of stock.")
+        return redirect('item_detail', slug=item.slug)
+
     # Prevent self-purchase
     if request.user.is_authenticated and item.seller.user == request.user:
         messages.error(request, "You cannot buy your own item.")
@@ -485,28 +490,23 @@ def checkout_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.select_related('item', 'item__seller').all()
     
+    if not cart_items:
+        messages.info(request, "Your cart is empty.")
+        return redirect('cart')
+
     # Check for self-owned items
     for cart_item in cart_items:
         if cart_item.item.seller.user == request.user:
             messages.error(request, f"You cannot purchase your own item: {cart_item.item.title}. Please remove it from your cart.")
             return redirect('cart')
     
-    # Calculate Shipping
-    shipping_fee = 0
-    buyer_county = None
-    if hasattr(request.user, 'buyerprofile'):
-        buyer_county = request.user.buyerprofile.county
-    
-    processed_sellers = set()
-    
-    for cart_item in cart_items:
-        seller = cart_item.item.seller
-        if seller.id not in processed_sellers:
-            fee = calculate_shipping_fee(seller.county, buyer_county)
-            shipping_fee += fee
-            processed_sellers.add(seller.id)
+    # Fetch Pickup Stations
+    from .models import PickupStation
+    pickup_stations = PickupStation.objects.all().order_by('county', 'name')
 
     subtotal = cart.get_total_price()
+    # Default to 0 shipping until selected
+    shipping_fee = 0 
     grand_total = float(subtotal) + shipping_fee
     
     context = {
@@ -515,6 +515,7 @@ def checkout_view(request):
         'subtotal': subtotal,
         'shipping_fee': shipping_fee,
         'total': grand_total,
+        'pickup_stations': pickup_stations,
     }
     return render(request, 'marketplace/checkout.html', context)
 
@@ -746,6 +747,8 @@ def initiate_payment(request):
     if request.method == "POST":
         # 1. Prefer phone from form; fallback to profile if present
         form_phone = request.POST.get("phone_number")
+        pickup_station_id = request.POST.get("pickup_station_id")
+
         profile_phone = None
         try:
             profile_phone = request.user.buyerprofile.phone_number
@@ -757,21 +760,19 @@ def initiate_payment(request):
         try:
             cart = Cart.objects.get(user=request.user)
             
-            # Calculate Shipping Fee (Server-side)
+            # Calculate Shipping Fee (Server-side) based on selected station
             shipping_fee = 0
-            buyer_county = None
-            if hasattr(request.user, 'buyerprofile'):
-                buyer_county = request.user.buyerprofile.county
+            selected_station = None
             
-            processed_sellers = set()
-            cart_items = cart.items.select_related('item', 'item__seller').all()
-
-            for cart_item in cart_items:
-                seller = cart_item.item.seller
-                if seller.id not in processed_sellers:
-                    fee = calculate_shipping_fee(seller.county, buyer_county)
-                    shipping_fee += fee
-                    processed_sellers.add(seller.id)
+            if pickup_station_id:
+                from .models import PickupStation
+                try:
+                    selected_station = PickupStation.objects.get(id=pickup_station_id)
+                    shipping_fee = float(selected_station.shipping_fee)
+                except (PickupStation.DoesNotExist, ValueError):
+                    return JsonResponse({"error": "Invalid pickup station selected."}, status=400)
+            else:
+                 return JsonResponse({"error": "Please select a pickup station."}, status=400)
             
             subtotal = cart.get_total_price()
             grand_total = float(subtotal) + shipping_fee
@@ -801,11 +802,12 @@ def initiate_payment(request):
 
         # Create a single Order and OrderItems snapshot to avoid duplicates
         # Use the calculated grand_total
+        cart_items = cart.items.select_related('item', 'item__seller').all()
         order = Order.objects.create(user=request.user, total_amount=grand_total, status='payment_pending')
         
-        # Assign Pickup Station from Profile if available
-        if hasattr(request.user, 'buyerprofile') and request.user.buyerprofile.pickup_station:
-            order.pickup_station = request.user.buyerprofile.pickup_station
+        # Assign Pickup Station
+        if selected_station:
+            order.pickup_station = selected_station
             order.save(update_fields=['pickup_station'])
 
         for ci in cart_items:

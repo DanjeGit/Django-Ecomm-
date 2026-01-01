@@ -46,24 +46,29 @@
             </li>
             <li class="list-group-item d-flex justify-content-between px-0 border-bottom-0 pt-0">
               <span class="text-muted">Shipping</span>
-              <span class="fw-bold">KSh {{ shipping_fee|floatformat:2 }}</span>
+              <span class="fw-bold" id="shippingDisplay">Calculated at checkout</span>
             </li>
             <li class="list-group-item d-flex justify-content-between px-0 border-top pt-3 mt-2">
               <span class="fw-bold fs-5">Total</span>
-              <span class="fw-bold fs-5 text-primary">KSh {{ total|floatformat:2 }}</span>
+              <span class="fw-bold fs-5 text-primary" id="totalDisplay">KSh {{ subtotal|floatformat:2 }}</span>
             </li>
           </ul>
           
           <div class="mt-4">
             <div id="paymentStatus" class="alert d-none rounded-3" role="alert"></div>
             
-            {% if request.user.buyerprofile.pickup_station %}
-            <div class="alert alert-info mb-3">
-                <i class="fa-solid fa-location-dot me-2"></i>
-                <strong>Pickup Station:</strong> {{ request.user.buyerprofile.pickup_station.name }}<br>
-                <small>{{ request.user.buyerprofile.pickup_station.address }}</small>
+            <div class="mb-4">
+                <label for="pickupStationSelect" class="form-label fw-bold">Select Pickup Station</label>
+                <select class="form-select" id="pickupStationSelect" required>
+                    <option value="" data-fee="0" selected disabled>Choose a location...</option>
+                    {% for station in pickup_stations %}
+                    <option value="{{ station.id }}" data-fee="{{ station.shipping_fee }}">
+                        {{ station.name }} - {{ station.county }} (KSh {{ station.shipping_fee }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text text-muted">Select your station for fee calculation.</div>
             </div>
-            {% endif %}
 
             <div class="bg-light p-4 rounded-4 mb-3">
                 <h6 class="fw-bold mb-3">Select Payment Method</h6>
@@ -86,12 +91,13 @@
                     <form id="stkForm" method="post" action="{% url 'mpesa_stk_push' %}">
                       {% csrf_token %}
                       <input type="hidden" name="payment_method" value="mpesa">
+                      <input type="hidden" name="pickup_station_id" id="hiddenPickupStationId">
                       <div class="mb-3">
                         <label class="form-label small fw-bold text-muted text-uppercase">M-Pesa Phone Number</label>
                         <input type="tel" name="phone_number" class="form-control form-control-lg border-0 bg-white" placeholder="e.g. 07XXXXXXXX" value="{{ request.user.buyerprofile.phone_number|default:'' }}" required>
                       </div>
-                      <input type="hidden" name="amount" value="{{ total }}">
-                      <button id="stkSubmit" type="submit" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm">
+                      <input type="hidden" name="amount" id="hiddenAmount" value="{{ subtotal }}">
+                      <button id="stkSubmit" type="submit" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm" disabled>
                         Pay with M-Pesa
                       </button>
                     </form>
@@ -136,6 +142,35 @@
     const form = document.getElementById('stkForm');
     const submitBtn = document.getElementById('stkSubmit');
     const alertBox = document.getElementById('paymentStatus');
+    
+    // Shipping Calculation Logic
+    const subtotal = parseFloat("{{ subtotal|stringformat:'f' }}");
+    const stationSelect = document.getElementById('pickupStationSelect');
+    const shippingDisplay = document.getElementById('shippingDisplay');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const hiddenAmount = document.getElementById('hiddenAmount');
+    const hiddenStationId = document.getElementById('hiddenPickupStationId');
+
+    if (stationSelect) {
+        stationSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const fee = parseFloat(selectedOption.dataset.fee || 0);
+            const stationId = this.value;
+
+            // Update displays
+            shippingDisplay.textContent = 'KSh ' + fee.toFixed(2);
+            const newTotal = subtotal + fee;
+            totalDisplay.textContent = 'KSh ' + newTotal.toFixed(2);
+
+            // Update form inputs
+            if (hiddenAmount) hiddenAmount.value = newTotal;
+            if (hiddenStationId) hiddenStationId.value = stationId;
+
+            // Enable submit
+            if (submitBtn) submitBtn.disabled = false;
+        });
+    }
+
     if (!form) return;
 
     function showAlert(cls, msg){

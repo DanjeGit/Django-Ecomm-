@@ -125,6 +125,13 @@ class WasteItem(models.Model):
         return reverse('item_detail', args=[self.slug])
 
     @property
+    def stock_int(self):
+        try:
+            return int(float(self.stock_quantity))
+        except (ValueError, TypeError):
+            return 0
+
+    @property
     def discount_percent(self):
         if self.old_price and self.old_price > self.price:
             return int(((self.old_price - self.price) / self.old_price) * 100)
@@ -153,9 +160,10 @@ class PickupStation(models.Model):
     county = models.CharField(max_length=100)
     sub_county = models.CharField(max_length=100)
     address = models.TextField(help_text="Detailed address or landmarks")
+    shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=200.00, help_text="Cost to ship to this station")
     
     def __str__(self):
-        return f"{self.name} - {self.sub_county}, {self.county}"
+        return f"{self.name} - {self.sub_county} (KSh {self.shipping_fee})"
 
 class BuyerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buyerprofile')
