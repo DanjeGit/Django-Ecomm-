@@ -51,16 +51,17 @@ if IS_RENDER:
 
 # 3. APPLICATION DEFINITION
 INSTALLED_APPS = [
-    # Cloudinary Storage must be BEFORE django.contrib.staticfiles
-    'cloudinary_storage', 
-    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Cloudinary Storage (Moved after staticfiles since we only use it for MEDIA)
+    'cloudinary_storage', 
     'cloudinary',
+    
     'anymail', # Email API Provider
     'marketplace',
     # 'mpesa', # Uncomment if you have an mpesa app
@@ -140,11 +141,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# DEBUG: Print paths to verify on Render
-print(f"DEBUG: BASE_DIR={BASE_DIR}")
-print(f"DEBUG: STATIC_ROOT={STATIC_ROOT}")
-print(f"DEBUG: STATICFILES_DIRS={STATICFILES_DIRS}")
-
 MEDIA_URL = '/media/'
 
 if IS_RENDER:
@@ -154,13 +150,13 @@ if IS_RENDER:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            # Use standard Django storage to completely bypass WhiteNoise strict checks
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            # Use WhiteNoise storage for serving static files
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
     
     # Legacy Fallback
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
     # Cloudinary Config (Keep this)
     CLOUDINARY_STORAGE = {
@@ -214,6 +210,7 @@ if not os.environ.get('BREVO_API_KEY'):
 
 # 11. WHITENOISE SETTINGS
 WHITENOISE_KEEP_ONLY_HASHED_FILES = False
+WHITENOISE_USE_FINDERS = True
 
 # 12. CELERY SETTINGS
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
