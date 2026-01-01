@@ -101,19 +101,13 @@ WSGI_APPLICATION = 'resource_loop.wsgi.application'
 
 
 # 4. DATABASE
-if IS_RENDER:
-    # Production: Using PostgreSQL via Render's URL
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    }
-else:
-    # Local: Use SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Flexible configuration: Use DATABASE_URL if available (Render or Local with Remote DB), else SQLite
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600
+    )
+}
 
 
 # 5. PASSWORD VALIDATION
