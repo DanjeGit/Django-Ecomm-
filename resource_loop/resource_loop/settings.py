@@ -58,13 +58,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # Cloudinary Storage (Moved after staticfiles since we only use it for MEDIA)
+    # Cloudinary Storage 
     'cloudinary_storage', 
     'cloudinary',
     
     'anymail', # Email API Provider
     'marketplace',
-    # 'mpesa', # Uncomment if you have an mpesa app
 ]
 
 MIDDLEWARE = [
@@ -103,7 +102,8 @@ WSGI_APPLICATION = 'resource_loop.wsgi.application'
 # 4. DATABASE
 # Flexible configuration: Use DATABASE_URL if available (Render or Local with Remote DB), else SQLite
 DATABASES = {
-    'default': dj_database_url.config(
+    'default': dj_database_url.config
+    (
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
         conn_max_age=600
     )

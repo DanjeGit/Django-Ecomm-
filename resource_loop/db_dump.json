@@ -1,0 +1,309 @@
+[
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "6",
+    "object_repr": "danny - login - 2026-01-01 20:19:42.859150+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "5",
+    "object_repr": "None - logout - 2026-01-01 17:55:09.202217+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "4",
+    "object_repr": "njd563347@gmail.com - login - 2026-01-01 08:22:53.409628+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "3",
+    "object_repr": "danje001@gmail.com - logout - 2026-01-01 08:15:12.703937+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "2",
+    "object_repr": "None - login - 2025-12-31 11:26:21.319217+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2026-01-01T20:20:15.110Z",
+    "user": 4,
+    "content_type": 22,
+    "object_id": "1",
+    "object_repr": "danje001@gmail.com - login - 2025-12-31 10:48:05.222438+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$XUeIaxdMFG7ViiHPebdUq1$Y39dpqYxIqntpbs8dCHUsHhX6fRfq8qQq73uH5t/VQ4=",
+    "last_login": "2025-12-31T10:48:05.220Z",
+    "is_superuser": false,
+    "username": "danje001@gmail.com",
+    "first_name": "daniel",
+    "last_name": "james",
+    "email": "danje001@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-12-31T10:47:34.228Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$1YbK5ZaCBqI8BKmu36GEvi$TVesnMW9MT0nBtaELZnuDqGfrvzuWG6tkQxO1bhHi7U=",
+    "last_login": "2026-01-01T08:22:53.374Z",
+    "is_superuser": false,
+    "username": "njd563347@gmail.com",
+    "first_name": "Daniel",
+    "last_name": "N",
+    "email": "njd563347@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-01-01T08:22:07.210Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 4,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$NGhiEiavVAS3rH0VENU9zp$rGFu80uqdrAIc8Y1Q1vk8qotQnFaO9xRs6LVWWw3cg8=",
+    "last_login": "2026-01-01T20:19:42.855Z",
+    "is_superuser": true,
+    "username": "danny",
+    "first_name": "",
+    "last_name": "",
+    "email": "dannje002@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-01-01T20:16:58.798Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "0j321w7ze6smdgcipg2qb57ur2e75to2",
+  "fields": {
+    "session_data": "eyJjYXJ0Ijp7IjEiOjF9fQ:1vbBor:omgNkQ_p3TLtMUkTOwj4Uy5vixXWHb79H1L0imZPMtE",
+    "expire_date": "2026-01-15T06:05:57.638Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "9865bgtjw24pmnxg1f5ekfpvc4t23o51",
+  "fields": {
+    "session_data": ".eJxVi0sOwiAQQO_C2jRDix1waeJab0CGGQhNPxpoV8a7q0kXun2fp_K0rdlvNRY_iDopow6_LBCPcfmKmcoY18dEHJud1uYy0zBdyy3fl3je078_U82fWZh7sUycEEAHCNRSsoiuS65vjyLoEDuK1gIkcGC07VIQCWJYEyT1egPXTjhZ:1vbP94:U26MZuHtDSknBZPusqI4WBJvpBRA1R9KH1hlSUnb3lw",
+    "expire_date": "2026-01-15T20:19:42.864Z"
+  }
+},
+{
+  "model": "marketplace.shippingconfiguration",
+  "pk": 1,
+  "fields": {
+    "same_county_fee": "200.00",
+    "different_county_fee": "500.00",
+    "standard_fee": "300.00"
+  }
+},
+{
+  "model": "marketplace.otp",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "code": "800671",
+    "created_at": "2025-12-31T10:47:36.845Z",
+    "is_used": true,
+    "attempts": 0
+  }
+},
+{
+  "model": "marketplace.otp",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "code": "760357",
+    "created_at": "2026-01-01T08:22:09.753Z",
+    "is_used": true,
+    "attempts": 0
+  }
+},
+{
+  "model": "marketplace.notification",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "title": "Welcome to Resource Loop!",
+    "message": "Thank you for joining our community. Start exploring items or list your own waste.",
+    "is_read": false,
+    "created_at": "2025-12-31T10:48:05.225Z",
+    "link": "/dashboard/user/"
+  }
+},
+{
+  "model": "marketplace.notification",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "title": "Welcome to Resource Loop!",
+    "message": "Thank you for joining our community. Start exploring items or list your own waste.",
+    "is_read": false,
+    "created_at": "2026-01-01T08:22:53.413Z",
+    "link": "/dashboard/user/"
+  }
+},
+{
+  "model": "marketplace.wasteitem",
+  "pk": 1,
+  "fields": {
+    "seller": 1,
+    "category": null,
+    "title": "Dead Computers",
+    "slug": "dead-computers-danje001gmailcom",
+    "description": "Dead boards booting up but worn out.",
+    "specifications": "core i5 processors.",
+    "price": "1.00",
+    "old_price": null,
+    "stock_quantity": "100",
+    "condition": "scrap",
+    "location": "Kuresoi North, Nakuru",
+    "county": "Nakuru",
+    "sub_county": "Kuresoi North",
+    "image": "media/items/dead_nqwly5",
+    "is_verified_seller": false,
+    "is_flash_sale": false,
+    "co2_saved_kg": 0.0,
+    "rating": "0.0",
+    "reviews_count": 0,
+    "created_at": "2025-12-31T11:19:11.140Z",
+    "updated_at": "2025-12-31T11:19:11.140Z"
+  }
+},
+{
+  "model": "marketplace.cart",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "created_at": "2025-12-31T10:59:05.760Z"
+  }
+},
+{
+  "model": "marketplace.cart",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "created_at": "2026-01-01T08:23:03.923Z"
+  }
+},
+{
+  "model": "marketplace.cartitem",
+  "pk": 2,
+  "fields": {
+    "cart": 3,
+    "item": 1,
+    "quantity": 1
+  }
+},
+{
+  "model": "marketplace.buyerprofile",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "phone_number": "0768446282",
+    "location": "",
+    "county": "Nakuru",
+    "sub_county": "Molo",
+    "pickup_station": null
+  }
+},
+{
+  "model": "marketplace.buyerprofile",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "phone_number": "0784167169",
+    "location": "",
+    "county": "Machakos",
+    "sub_county": "Machakos Town",
+    "pickup_station": null
+  }
+},
+{
+  "model": "marketplace.sellerprofile",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "business_name": "danje001@gmail.com",
+    "is_verified": false,
+    "payment_number": "",
+    "county": null,
+    "sub_county": null,
+    "profile_image": "",
+    "description": ""
+  }
+},
+{
+  "model": "marketplace.sellerprofile",
+  "pk": 2,
+  "fields": {
+    "user": 3,
+    "business_name": "njd563347@gmail.com",
+    "is_verified": false,
+    "payment_number": "",
+    "county": null,
+    "sub_county": null,
+    "profile_image": "",
+    "description": ""
+  }
+}
+]

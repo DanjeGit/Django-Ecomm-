@@ -1,0 +1,11 @@
+[
+{
+  "model": "marketplace.shippingconfiguration",
+  "pk": 1,
+  "fields": {
+    "same_county_fee": "200.00",
+    "different_county_fee": "500.00",
+    "standard_fee": "300.00"
+  }
+}
+]
