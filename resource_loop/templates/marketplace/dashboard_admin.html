@@ -24,7 +24,7 @@
         <div class="nav-item">
             <a href="{% url 'admin:index' %}" class="nav-link">
                 <i class="fa-solid fa-gear"></i>
-                <span>Django Admin</span>
+                <span>Admin Panel</span>
             </a>
         </div>
         <div class="nav-item">
@@ -129,7 +129,7 @@
                         <li><h6 class="dropdown-header">Signed in as <strong>{{ request.user.username }}</strong></h6></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'my_account' %}"><i class="fa-regular fa-user me-2"></i>My Profile</a></li>
-                        <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fa-solid fa-gear me-2"></i>Django Admin</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fa-solid fa-gear me-2"></i>Admin Panel</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
                     </ul>
