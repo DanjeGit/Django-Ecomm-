@@ -40,7 +40,7 @@
                 {% for item in items %}
                 <div class="item-row">
                     {% if item.item.image %}
-                    <img src="{{ domain }}{{ item.item.image.url }}" alt="{{ item.item.title }}" class="item-image">
+                    <img src="{{ item.item.image.url }}" alt="{{ item.item.title }}" class="item-image">
                     {% else %}
                     <div class="item-image" style="display:flex;align-items:center;justify-content:center;color:#ccc;">No Img</div>
                     {% endif %}
